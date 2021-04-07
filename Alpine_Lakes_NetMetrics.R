@@ -185,7 +185,6 @@ plot(env_data[[s]][out[-which(is.na(out))],2],env_data[[s]][out[-which(is.na(out
 # Nice colours? CUNILLERA_palette is what you need
 source("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/CUNILLERA_palette.R")
 
-
 ##########################################
 ##########################################
 ##########                      ##########
@@ -447,7 +446,7 @@ max_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance 
                              check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
 # We extract the distance matrix and save it to run it externally (accelerate computing times)
 max_distance_down <- max_distance[[2]]
-save(max_distance_down, file = "S16-values/AlPS_lakes_percol_MAX_DISTANCE.RData")
+#save(max_distance_down, file = "S16-values/AlPS_lakes_percol_MAX_DISTANCE.RData")
 
 ##_____
 # Run the following chunk in some "supercomputer" that can last some days running and keep the result!
@@ -476,7 +475,7 @@ mid_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance 
                              check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
 # We extract the distance matrix and save it to run it externally (accelerate computing times)
 mid_distance_down <- mid_distance[[2]]
-save(mid_distance_down, file = "S16-values/AlPS_lakes_percol_MID_DISTANCE.RData")
+#save(mid_distance_down, file = "S16-values/AlPS_lakes_percol_MID_DISTANCE.RData")
 
 ##_____
 # Run the following chunk in some "supercomputer" that can last some days running and keep the result!
@@ -505,7 +504,7 @@ mid_mid_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_dista
                              check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
 # We extract the distance matrix and save it to run it externally (accelerate computing times)
 mid_mid_distance_down <- mid_mid_distance[[2]]
-save(mid_mid_distance_down, file = "S16-values/AlPS_lakes_percol_MID_MID_DISTANCE.RData")
+#save(mid_mid_distance_down, file = "S16-values/AlPS_lakes_percol_MID_MID_DISTANCE.RData")
 
 ##_____
 # Run the following chunk in some "supercomputer" that can last some days running and keep the result!
@@ -589,12 +588,17 @@ ALP_MIN_xarxa <- ifelse(ALP_MIN_xarxa>1,0,ALP_MIN_xarxa)
 ##____________________________________________________________ 
 
 
+# I already calculated the percolation distance for each network and already noted it in the following lines. 
+#there is no need to upload the values in the three major cases. 
 #MAX= 1422222
-load("S16-values/ALPINE_MAX_distance.RData")
+#load("S16-values/PC_cluster_out/ALPINE_MAX_distance.RData")
 #MID= 68732.87
-#load("S16-values/ALPINE_MID_distance.RData")
+#load("S16-values/PC_cluster_out/ALPINE_MID_distance.RData")
 #MID_MID= 72036.2
-#load("S16-values/ALPINE_MID_MID_distance.RData")
+#load("S16-values/PC_cluster_out/ALPINE_MID_MID_distance.RData")
+
+ALP_MAX_xarxa <- max_distance_down
+ALP_MAX_xarxa <- ifelse(max_distance_down>142222.2,0,1)
 
 ALP_MID_MID_xarxa <- mid_mid_distance_down
 ALP_MID_MID_xarxa <- ifelse(ALP_MID_MID_xarxa>72036.2,0,1)
@@ -604,8 +608,8 @@ ALP_MID_xarxa <- ifelse(ALP_MID_xarxa>68732.87,0,1)
 
 cordenades_xarxes <-list(max_distance[[1]],mid_distance[[1]],mid_mid_distance[[1]], small_distance[[1]], min_distance[[1]]) 
 MAPS_xarxes <- list(ALP_MAX_xarxa, ALP_MID_xarxa, ALP_MID_MID_xarxa, ALP_SMALL_xarxa, ALP_MIN_xarxa)
-maps_Alps <- list()
 
+maps_Alps <- list()
 detach("package:igraph", unload = TRUE)
 for (e in 1:length(cordenades_xarxes)) {
 factors <- rep("No_Sampled",nrow(MAPS_xarxes[[e]]))
@@ -837,7 +841,7 @@ save(diversity_data, file = "S16-values/network_dataset.RData")
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-# PCA_approach __________________________________________________________________________________________###
+# PCA_approach __________________________________________________________________________________________####
 
 PCA_biod_results <- list()
 PCA_biod_plots <- list()
@@ -880,7 +884,7 @@ grid.arrange(autoplot(PCA_biod_plots[[1]],loadings=T, loadings.label = TRUE, loa
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-# PCA_approach __________________________________________________________________________________________###
+# PCA_approach __________________________________________________________________________________________####
 
 # Extracting the values of which lakes have been sampled for each taxonomic group
 # S16 = 52 lakes
@@ -955,7 +959,7 @@ dev.off()
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
 ###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-# NON PCA_approach ______________________________________________________________________________________###
+# NON PCA_approach ______________________________________________________________________________________####
 
 # Extracting the values of which lakes have been sampled for each taxonomic group
 # S16 = 52 lakes

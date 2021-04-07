@@ -64,10 +64,28 @@ names(env_data) <-list.names.env
 
 # LOAD DATASET from NORWAY _______________________________####
 
+# Loading Norwegian Data
 
+load("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/com.fish.Rdata")
+load("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/com.zoo.Rdata")
+load("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/com.phyto.Rdata")
 
+Norw.fish <- fish
+Norw.zoo <- zoo
+Norw.phyto <- com
+
+load("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/env.phyto.Rdata")
+Norw.env <- env[,c(1,7,8,14:23)]
+Norw.env[is.na(Norw.env)] <- 0
 
 # LOAD DATASET from SODA PANS _______________________________####
+
+setwd("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/S16-values/SodaPANS_Zsófia")
+load("Seewinkel_predictors.RData")
+load("Seewinkel_zoopl.RData")
+setwd("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/ALPINE_Lakes/Alpine_Lakes")
+
+Sods.env <- pred[,3:ncol(pred)]
 
 
 
@@ -103,7 +121,6 @@ dbRDA_Env_Track <- function(communnity_dataset,environmental_dataset, distance){
   }
   print(tst_coeficient)
 }
-
 
 CCA_Env_Track <- function(communnity_dataset,environmental_dataset){
   # Calculate the CCA with the community data and the environmental and the corresponding distance

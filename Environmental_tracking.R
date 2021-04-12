@@ -273,9 +273,9 @@ phyt_CCA <- Results_treatment(Env_Track =output_CCA[[3]] ,lon = env.phy$lon,lat 
 
 # ZOO ________________________________________________________________________________________#
 #dbRDA
-zoo_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[4]] ,lon = env.zoo$lon,lat =env.zoo$lat, number_colors=35, title="Norw_ZOO", subtitle="dbRDA")
+zoo_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[4]] ,lon = env.zoo$lon,lat =env.zoo$lat, number_colors=35, title="Alp_ZOO", subtitle="dbRDA")
 #CCA
-zoo_CCA <- Results_treatment(Env_Track =output_CCA[[4]] ,lon = env.zoo$lon,lat =env.zoo$lat, number_colors=25, title="Norw_ZOO", subtitle="CCA")
+zoo_CCA <- Results_treatment(Env_Track =output_CCA[[4]] ,lon = env.zoo$lon,lat =env.zoo$lat, number_colors=25, title="Alp_ZOO", subtitle="CCA")
 
 # NORW RESULTS ####
 # Fish ________________________________________________________________________________________#
@@ -307,7 +307,7 @@ Soda_CCA <- Results_treatment(Env_Track =output_CCA[[8]],lon = pred$lon,lat =pre
 # Arrange the two charts
 # The legend boxes are centered
 grid.newpage()
-png(filename = "Env_Track.png" ,width=3000,height=7000,units="px",res=300)
+png(filename = "Env_Track.png" ,width=3500,height=8000,units="px",res=300)
 grid.arrange(s16_dbRDA[[2]],s16_CCA[[2]],
              s18_dbRDA[[2]],s18_CCA[[2]],
              phyt_dbRDA[[2]],phyt_CCA[[2]],

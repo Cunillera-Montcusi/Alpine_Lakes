@@ -4,20 +4,27 @@
 ##########  PACKAGE UPLOADING   ##########
 ##########                      ##########
 ##########################################
-
+#Anlisys
 library(vegan)
-library(betareg)
-library(corrplot)
 library(mgcv)
 library(MuMIn)
+#Plot and data management
+library(ggplot2)
+library(tidyverse)
+library(gtable)    
+library(grid)
+library(gridExtra) 
 
-source("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/CUNILLERA_palette.R")
+# Define the workind directory
+setwd("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/ALPINE_Lakes/Alpine_Lakes/upload_Envtrack")
+
+source("CUNILLERA_palette.R")
 
 ##########################################
 # LOAD DATASET from ALPINE LAKES _______________________________####
 ##### 16S bacterial plankton
-load("S16-values/com.16S.Rdata")
-load("S16-values/env.16S.Rdata")
+load("com.16S.Rdata")
+load("env.16S.Rdata")
 com.16S <- com
 env.16S <- env 
 # select OTUS with min occurence of 10 sites (=exclude rare OTUs)
@@ -25,8 +32,8 @@ seltax<-which(colSums(com.16S>0)>9)
 com_S16<-com.16S[,seltax]
 
 ##### 18S bacterial plankton
-load("S16-values/com.18S.Rdata")
-load("S16-values/env.18S.Rdata")
+load("com.18S.Rdata")
+load("env.18S.Rdata")
 com.18S <- com
 env.18S <- env 
 # select OTUS with min occurence of 10 sites (=exclude rare OTUs)
@@ -34,8 +41,8 @@ seltax<-which(colSums(com.18S>0)>9)
 com.18S<-com.18S[,seltax]
 
 ##### Phytoplankton bacterial plankton
-load("S16-values/com.phyt.Rdata")
-load("S16-values/env.phyt.Rdata")
+load("com.phyt.Rdata")
+load("env.phyt.Rdata")
 com.phy <- com
 env.phy <- env 
 # select OTUS with min occurence of 2 sites (=exclude rare OTUs)
@@ -43,8 +50,8 @@ seltax<-which(colSums(com.phy>0)>1)
 com.phy<-com.phy[,seltax]
 
 ##### Zooplankton bacterial plankton
-load("S16-values/com.zoo.Rdata")
-load("S16-values/env.zoo.Rdata")
+load("com.zoo.Rdata")
+load("env.zoo.Rdata")
 com.zoo <- com
 env.zoo <- env 
 
@@ -88,9 +95,9 @@ ALP_Zoo_env <- as.matrix(env_data$env.zoo[,4:6])
 
 # LOAD DATASET from NORWAY _______________________________####
 
-load("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/com.fish.Rdata")
-load("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/com.zoo.Rdata")
-load("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/com.phyto.Rdata")
+load("Norw.com.fish.Rdata")
+load("Norw.com.zoo.Rdata")
+load("Norw.com.phyto.Rdata")
 
 Norw.fish <- fish
 apply(Norw.fish,1,sum)
@@ -102,7 +109,7 @@ Norw.zoo <- Norw.zoo[-5,]
 Norw.phyto <- ifelse(com>0,1,0)
 apply(Norw.phyto,1,sum)
 
-load("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/env.phyto.Rdata")
+load("Norw.env.phyto.Rdata")
 Norw.env <- env[,c(7,8,14,16:23)]
 Norw.env[is.na(Norw.env)] <- 0
 Norw.env <- as.matrix(log(Norw.env+1))
@@ -110,10 +117,8 @@ Norw.env <- as.matrix(log(Norw.env+1))
 Norw.env.zoo <- Norw.env[-5,] 
 
 # LOAD DATASET from SODA PANS _______________________________####
-setwd("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/S16-values/SodaPANS_Zsófia")
-load("Seewinkel_predictors.RData")
-load("Seewinkel_zoopl.RData")
-setwd("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/ALPINE_Lakes/Alpine_Lakes")
+load("Seewinkel_predictors.Rdata")
+load("Seewinkel_zoopl.Rdata")
 
 Sods.env <- cbind(pred$lZs,pred$lCond,pred$lTSS)
 Sods.env <- as.matrix(Sods.env)
@@ -144,7 +149,7 @@ dbRDA_Env_Track <- function(communnity_dataset,environmental_dataset, distance){
   # Correlation between predicted and observed values
   for (e in 1:nrow(communnity_dataset)) {
     tst_coeficient[e] <- cor(as.matrix(fitteds)[e,-e], # As matrix the fitteds to select the corresponding row, minus the column corresponding to themselves
-                             as.matrix(vegdist(communnity_dataset, method = distance))[e,-e], method = "spearman") # Same for the fitteds
+                             as.matrix(vegdist(communnity_dataset, method = distance))[e,-e], method = "pearson") # Same for the fitteds
   }
 tst_coeficient
 }
@@ -160,7 +165,7 @@ CCA_Env_Track <- function(communnity_dataset,environmental_dataset){
   # Correlation between predicted and observed values
   for (e in 1:nrow(communnity_dataset)) {
     tst_coeficient[e] <- cor(fitteds[e,], # As matrix the fitteds to select the corresponding row, minus the column corresponding to themselves
-                             as.numeric(communnity_dataset[e,]), method = "spearman")
+                             as.numeric(communnity_dataset[e,]), method = "pearson")
   }
 tst_coeficient
 }
@@ -184,11 +189,11 @@ for (e in 1:length(com_list)) {
 # Results treatment
 # As in Wind dispersal results in a gradient of dispersal limitation and environmental match among discrete aquatic habitats
 # DOI: 10.1111/ecog.01685
-Results_treatment <- function(Env_Track, lon, lat,number_colors){
+Results_treatment <- function(Env_Track, lon, lat,number_colors=30, title, subtitle){
 Best_Models <- list()
 Plots <- list()
 
-value.results <- as.data.frame(cbind(Env_Track,lon, lat))
+value.results <- as.data.frame(cbind(Env_Track,lon,lat))
 colnames(value.results) <- c("EnvTrack","lon","lat")
 
 gm1<-gam(EnvTrack~s(lon, lat), data =value.results) 
@@ -204,83 +209,114 @@ xy<-expand.grid(seq(min(value.results$lon)-0.03, max(value.results$lon)+0.03, l=
                 seq(min(value.results$lat)-0.03, max(value.results$lat)+0.03, l=30))
 xy_layout <- data.frame(lon=xy[,1], lat=xy[,2])
 pred2<-predict(gamModels[[as.numeric(rownames(model.sel(gamModels)[1]))]], newdata=xy_layout)
-  
-# Choose colours
-my.cols<-CUNILLERA_pal("LGTBI")(number_colors)
 
-# Project environmental mismatch on the map 
-filled.contour(seq(min(value.results$lon, na.rm=TRUE)-0.03, max(value.results$lon,na.rm=TRUE)+0.03, l=30),
-               seq(min(value.results$lat, na.rm=TRUE)-0.03, max(value.results$lat, na.rm=TRUE)+0.03, l=30),
-               matrix(pred2, nrow=30), 
-               col=my.cols, 
-               nlevels=30, 
-               plot.axes = { points(value.results$lat~value.results$lon,
-                                    bg=my.cols[cut(value.results$EnvTrack, length(my.cols), lab=F)], pch=21, cex=1.2, col="black");
-                 axis(1); axis(2); title(main="Env_Track", xlab="Longitude", ylab="Latitude")
-               })
-Best_Models[[1]]
+# Generate dataset to plot all the values
+z <- as.data.frame(matrix(pred2, nrow=30))  
+plot_data <- data.frame(x=xy_layout[,1],y=xy_layout[,2], z=pivot_longer(z,cols=1:30))
+colors <- CUNILLERA_pal("LGTBI_pale",reverse = F)(number_colors)[cut(value.results$EnvTrack, number_colors)]
+
+Plots[[1]] <- ggplot(plot_data)+
+  # Raster with all the data, hjust and vjust hide the bakground and INTERPOLATE= T dissolve the rasters 
+  geom_raster(aes(x = x,y=y,fill=z.value),hjust=1,vjust=1,interpolate = T)+
+  # Scale y axis and set the levels
+  scale_y_continuous(limits = c(min(plot_data$y, na.rm=TRUE),max(plot_data$y, na.rm=TRUE)),
+                     expand = c(0,0),
+                     breaks = seq(from=min(plot_data$y, na.rm=TRUE), to=max(plot_data$y, na.rm=TRUE), by=0.2))+
+  # Scale x axis and set the levels--> WARNING: The maximum distance is 21km!! IS A LIE!
+  scale_x_continuous(limits = c(min(plot_data$x, na.rm=TRUE),max(plot_data$x, na.rm=TRUE)),
+                     expand = c(0,0),
+                     breaks = seq(from=min(plot_data$x, na.rm=TRUE), to=max(plot_data$x, na.rm=TRUE), by=0.2))+
+  # Scalate thte colours, spectral means going from red to blue LIMITS force the range to be btween 0 & 100
+  scale_fill_CUNILLERA(palette = "LGTBI_pale",discrete = F, reverse = F)+
+  geom_contour(aes(x = x,y=y,z=z.value), col="grey45", size=0.1, linetype=2)+
+  # Labs 
+  labs(x="Longitude",y="Latitude",title = title,subtitle = subtitle)+
+  geom_jitter(data =value.results, aes(y=lat, x=lon),fill=colors ,col="black", size=2, stroke=2,shape=21)+
+  # Theme stuff
+  theme_classic()+
+  theme(axis.line = element_line(size = 0.05, linetype = "solid"), 
+        axis.ticks = element_blank(), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        plot.margin = margin(0.4,1.5,0.4,1.5, "cm"),
+        axis.title = element_text(size = 10,face = "bold"), 
+        axis.text = element_text(size = 10,face = "bold"), 
+        axis.text.x = element_text(size = 10, color = "black"), 
+        axis.text.y = element_text(size = 10, color = "black"), 
+        legend.position = "right",
+        panel.background = element_rect(colour = "black", size = 2.5, linetype = "solid"),
+        plot.background = element_rect(colour = "black", size = 1, linetype = "solid"), 
+        plot.subtitle = element_text(size = 12,face = "bold", colour = "gray0"),
+        plot.title = element_text(size = 14, face = "bold"))
+
+list(Best_Models[[1]], Plots[[1]])
 }
 
 # ALPINE RESULTS ####
 # S16 ________________________________________________________________________________________#
 #dbRDA
-Results_treatment(Env_Track =output_dbRDA[[1]] ,lon = env.16S$lon,lat =env.16S$lat, number_colors=35)
+s16_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[1]] ,lon = env.16S$lon,lat =env.16S$lat, number_colors=20, title="Alp_S16", subtitle="dbRDA")
 #CCA
-Results_treatment(Env_Track =output_CCA[[1]] ,lon = env.16S$lon,lat =env.16S$lat, number_colors=35)
+s16_CCA <- Results_treatment(Env_Track =output_CCA[[1]] ,lon = env.16S$lon,lat =env.16S$lat, number_colors=20, title="Alp_S16", subtitle="CCA")
 
 # S18 ________________________________________________________________________________________#
 #dbRDA
-Results_treatment(Env_Track =output_dbRDA[[2]] ,lon = env.18S$lon,lat =env.18S$lat, number_colors=35)
+s18_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[2]] ,lon = env.18S$lon,lat =env.18S$lat, number_colors=35, title="Alp_S18", subtitle="dbRDA")
 #CCA
-Results_treatment(Env_Track =output_CCA[[2]] ,lon = env.18S$lon,lat =env.18S$lat, number_colors=35)
+s18_CCA <- Results_treatment(Env_Track =output_CCA[[2]] ,lon = env.18S$lon,lat =env.18S$lat, number_colors=35, title="Alp_S18", subtitle="CCA")
 
 # PHYT ________________________________________________________________________________________#
 #dbRDA
-Results_treatment(Env_Track =output_dbRDA[[3]] ,lon = env.phy$lon,lat =env.phy$lat, number_colors=35)
+phyt_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[3]] ,lon = env.phy$lon,lat =env.phy$lat, number_colors=35, title="Alp_PHYT", subtitle="dbRDA")
 #CCA
-Results_treatment(Env_Track =output_CCA[[3]] ,lon = env.phy$lon,lat =env.phy$lat, number_colors=20)
+phyt_CCA <- Results_treatment(Env_Track =output_CCA[[3]] ,lon = env.phy$lon,lat =env.phy$lat, number_colors=20, title="Alp_PHYT", subtitle="CCA")
 
 # ZOO ________________________________________________________________________________________#
 #dbRDA
-Results_treatment(Env_Track =output_dbRDA[[4]] ,lon = env.zoo$lon,lat =env.zoo$lat, number_colors=35)
+zoo_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[4]] ,lon = env.zoo$lon,lat =env.zoo$lat, number_colors=35, title="Norw_ZOO", subtitle="dbRDA")
 #CCA
-Results_treatment(Env_Track =output_CCA[[4]] ,lon = env.zoo$lon,lat =env.zoo$lat, number_colors=25)
+zoo_CCA <- Results_treatment(Env_Track =output_CCA[[4]] ,lon = env.zoo$lon,lat =env.zoo$lat, number_colors=25, title="Norw_ZOO", subtitle="CCA")
 
 # NORW RESULTS ####
 # Fish ________________________________________________________________________________________#
 #dbRDA
-Results_treatment(Env_Track =output_dbRDA[[5]] ,lon = env$Longitude,lat =env$Latitude, number_colors=40)
+norw.fish_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[5]] ,lon = env$Longitude,lat =env$Latitude, number_colors=40,title="Norw_Fish", subtitle="dbRDA")
 #CCA
-Results_treatment(Env_Track =output_CCA[[5]] ,lon = env$Longitude,lat =env$Latitude, number_colors=40)
+norw.fish_CCA <- Results_treatment(Env_Track =output_CCA[[5]] ,lon = env$Longitude,lat =env$Latitude, number_colors=40,title="Norw_Fish", subtitle="CCA")
 
 # Zoo ________________________________________________________________________________________#
 #dbRDA
-Results_treatment(Env_Track =output_dbRDA[[6]] ,lon = env$Longitude[-5],lat =env$Latitude[-5], number_colors=45)
+norw.zoo_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[6]] ,lon = env$Longitude[-5],lat =env$Latitude[-5], number_colors=45,title="Norw_ZOO", subtitle="dbRDA")
 #CCA
-Results_treatment(Env_Track =output_CCA[[6]] ,lon = env$Longitude[-5],lat =env$Latitude[-5], number_colors=35)
+norw.zoo_CCA <- Results_treatment(Env_Track =output_CCA[[6]] ,lon = env$Longitude[-5],lat =env$Latitude[-5], number_colors=35,title="Norw_ZOO", subtitle="CCA")
 
 # Phy ________________________________________________________________________________________#
 #dbRDA
-Results_treatment(Env_Track =output_dbRDA[[7]],lon = env$Longitude,lat =env$Latitude, number_colors=45)
+norw.phy_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[7]],lon = env$Longitude,lat =env$Latitude, number_colors=45,title="Norw_Phy", subtitle="dbRDA")
 #CCA
-Results_treatment(Env_Track =output_CCA[[7]],lon = env$Longitude,lat =env$Latitude, number_colors=30)
+norw.phy_CCA <- Results_treatment(Env_Track =output_CCA[[7]],lon = env$Longitude,lat =env$Latitude, number_colors=30,title="Norw_Phy", subtitle="CCA")
 
 # SODA PANS RESULTS ####
 # dbRDA __________________________________________________________________________________#
 #dbRDA
-Results_treatment(Env_Track =output_dbRDA[[8]],lon = pred$lon,lat =pred$lat, number_colors=40)
+Soda_dbRDA <- Results_treatment(Env_Track =output_dbRDA[[8]],lon = pred$lon,lat =pred$lat, number_colors=40,title="Soda", subtitle="dbRDA")
 
 #CCA
-Results_treatment(Env_Track =output_CCA[[8]],lon = pred$lon,lat =pred$lat, number_colors=45)
+Soda_CCA <- Results_treatment(Env_Track =output_CCA[[8]],lon = pred$lon,lat =pred$lat, number_colors=45,title="Soda", subtitle="CCA")
 
-
-
-
-
-
-
-
-
-
+# Arrange the two charts
+# The legend boxes are centered
+grid.newpage()
+png(filename = "Env_Track.png" ,width=3000,height=7000,units="px",res=300)
+grid.arrange(s16_dbRDA[[2]],s16_CCA[[2]],
+             s18_dbRDA[[2]],s18_CCA[[2]],
+             phyt_dbRDA[[2]],phyt_CCA[[2]],
+             zoo_dbRDA[[2]],zoo_CCA[[2]],
+             norw.fish_dbRDA[[2]],norw.fish_CCA[[2]],
+             norw.zoo_dbRDA[[2]],norw.zoo_CCA[[2]],
+             norw.phy_dbRDA[[2]],norw.phy_CCA[[2]],
+             Soda_dbRDA[[2]],Soda_CCA[[2]],
+             ncol = 2, nrow=8)
+dev.off()
 
 

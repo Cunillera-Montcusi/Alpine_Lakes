@@ -906,6 +906,8 @@ biod
 # Phy = 50 lakes
 # Zoo = 52 lakes
 
+biod_names <- c("S16","S18","phy","zoo")
+
 coincidence <- c()
 coincidence_values <- list()
 for (r in 1:4) {
@@ -924,7 +926,7 @@ for (groups in 1:4) {
   for (net in 1:5) {
     coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
     dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
-                     biod[[groups]][,1:6])
+                     biod[[groups]][,1:5])
     colnames(dataset)[1] <-c("Network")
     plots_grups <- list()
   for(var in 1:5){
@@ -947,7 +949,7 @@ for (groups in 1:4) {
         }
       }
     
-  png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",names(PCA_biod_results)[[groups]],"_",names(PCA_network_results)[[net]],".png"),
+  png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",biod_names[[groups]],"_",names(PCA_network_results)[[net]],".png"),
       width =582*2 ,height =629*2 ,units ="px",res = 200)
   grid.arrange(plots_grups[[1]],plots_grups[[2]],
                plots_grups[[3]],plots_grups[[4]],
@@ -959,14 +961,13 @@ for (groups in 1:4) {
 
 
 
-PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
 
 for (groups in 1:4) {
   color_groups <- CUNILLERA_cols("yellow","blue","green","red")
   for (net in 1:5) {
     coin <- PCA_fluvial_network_results[[net]][all_lakes_BASINS_fluvial[[net]][correspondence_BASINS_fluvial[[net]]]]
     dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
-                     biod[[groups]][,1:6])
+                     biod[[groups]][,1:5])
     colnames(dataset)[1] <-c("Network")
     plots_grups <- list()
     for(var in 1:5){
@@ -989,7 +990,7 @@ for (groups in 1:4) {
       }
     }
     
-    png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",names(PCA_biod_results)[[groups]],"_",names(PCA_network_results)[[net]],".png"),
+    png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",biod_names[[groups]],"_",names(PCA_fluvial_network_results)[[net]],".png"),
         width =582*2 ,height =629*2 ,units ="px",res = 200)
     grid.arrange(plots_grups[[1]],plots_grups[[2]],
                  plots_grups[[3]],plots_grups[[4]],
@@ -998,6 +999,17 @@ for (groups in 1:4) {
     dev.off()
   }
 }             
+
+
+
+
+##########################################
+##########################################
+##########                      ##########
+##########        END           ##########
+##########                      ##########
+##########################################
+##########################################
 
 # PCA_approach __________________________________________________________________________________________####
 

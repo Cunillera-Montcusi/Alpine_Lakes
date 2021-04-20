@@ -27,6 +27,9 @@ library(geosphere) # Charging package to caluclate distances
 library(sp) # Other packages to deal with geospatial data 
 library(stars) # Other packages to deal with geospatial data 
 library(ggspatial) # Other packages to deal with geospatial data 
+library(foreign) # Work with dbf files
+library(rgdal) # upload and treat spatial data
+library(shp2graph) # convert shape to grpah
 
 # Plots to obtain a gg network plot
 library(GGally)
@@ -390,55 +393,38 @@ dist_lakes <- distm(lakes_sw_sp, fun = distGeo)
 function_result <- list(dat_corr,dist_lakes)
 }
 
-
-library(raster)
-
-a <- c('C:/Users/Cunilleramontcusi/Desktop/495044851ffb5dc430127353e17ee99eec4e04e4/eu_dem_v11_E40N20/eu_dem_v11_E40N20.TIF.tif')
-e <- extent(min(dat1[,1]),max(dat1[,1]), min(dat1[,2]), max(dat1[,2]))
-template <- raster(e)
-proj4string(template) <- CRS(taiwan_elevation)
-writeRaster(template, file="MiamiWatershed.tif", format="GTiff")
-mosaic_rasters(gdalfile=a,dst_dataset="MiamiWatershed.tif",of="GTiff")
-gdalinfo("MiamiWatershed.tif")
-
-
-library(topoDistance)
-
-taiwan_elevation <- raster("C:/Users/Cunilleramontcusi/Desktop/495044851ffb5dc430127353e17ee99eec4e04e4/eu_dem_v11_E40N20/eu_dem_v11_E40N20.tif")
-e <- extent(min(dat1[,1]),max(dat1[,1]), min(dat1[,2]), max(dat1[,2]))
-plot(dat1[,1],dat1[,2])
-
-writeRaster(template, file="MiamiWatershed.tif", format="GTiff")
-
-
-
-
-
-plot(taiwan_elevation)
-plot(dat1)
-
-td <- topoDist(taiwan_elevation, dat1[,1:2], paths = TRUE)
-
-tlcp <- topoLCP(Yosemite$DEM, Yosemite$SDM, xy, 
-                paths = TRUE) 
-topoPathMap(Yosemite$DEM, xy, tlcp, costSurface = 
-              Yosemite$SDM, 
-            type = "hillshade", pathColor = "purple")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#
+#library(raster)
+#
+#a <- c('C:/Users/Cunilleramontcusi/Desktop/495044851ffb5dc430127353e17ee99eec4e04e4/eu_dem_v11_E40N20/eu_dem_v11_E40N20.TIF.tif')
+#e <- extent(min(dat1[,1]),max(dat1[,1]), min(dat1[,2]), max(dat1[,2]))
+#template <- raster(e)
+#proj4string(template) <- CRS(taiwan_elevation)
+#writeRaster(template, file="MiamiWatershed.tif", format="GTiff")
+#mosaic_rasters(gdalfile=a,dst_dataset="MiamiWatershed.tif",of="GTiff")
+#gdalinfo("MiamiWatershed.tif")
+#
+#
+#library(topoDistance)
+#
+#taiwan_elevation <- raster("C:/Users/Cunilleramontcusi/Desktop/495044851ffb5dc430127353e17ee99eec4e04e4/eu_dem_v11_E40N20/eu_dem_v11_E40N20.tif")
+#e <- extent(min(dat1[,1]),max(dat1[,1]), min(dat1[,2]), max(dat1[,2]))
+#plot(dat1[,1],dat1[,2])
+#
+#writeRaster(template, file="MiamiWatershed.tif", format="GTiff")
+#
+#
+#plot(taiwan_elevation)
+#plot(dat1)
+#
+#td <- topoDist(taiwan_elevation, dat1[,1:2], paths = TRUE)
+#
+#tlcp <- topoLCP(Yosemite$DEM, Yosemite$SDM, xy, 
+#                paths = TRUE) 
+#topoPathMap(Yosemite$DEM, xy, tlcp, costSurface = 
+#              Yosemite$SDM, 
+#            type = "hillshade", pathColor = "purple")
+#
 
 #_______________________________________________________________________________________________________________###
 # Maxmimum distance between lakes -- 600 km approximately
@@ -633,6 +619,82 @@ png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps.png",width =745 ,hei
 grid.arrange(maps_Alps[[1]],maps_Alps[[2]],maps_Alps[[3]],maps_Alps[[4]],maps_Alps[[5]])
 dev.off()
 
+############################################
+############################################
+##########                        ##########
+########## RIVER NETWORK BUILDING ##########
+##########                        ##########
+############################################
+############################################
+# Print de coordinates of the two smaller scales to posteriorly trim the "river" network in Arcgis
+#write.dbf(max_distance[[1]], "GIS_data/max_distance.dbf")
+#write.dbf(mid_distance[[1]], "GIS_data/mid_distance.dbf")
+#write.dbf(mid_mid_distance[[1]], "GIS_data/mid_mid_distance.dbf")
+#write.dbf(small_distance[[1]], "GIS_data/small_distance.dbf")
+#write.dbf(min_distance[[1]], "GIS_data/min_distance.dbf")
+
+max_distance_BASINS <- read.dbf("GIS_data/max_distance_BASINS.dbf")
+mid_distance_BASINS <- read.dbf("GIS_data/mid_distance_BASINS.dbf")
+mid_mid_distance_BASINS <- read.dbf("GIS_data/mid_mid_distance_BASINS.dbf")
+small_distance_BASINS <- read.dbf("GIS_data/small_distance_BASINS.dbf")
+min_distance_BASINS <- read.dbf("GIS_data/min_distance_BASINS.dbf")
+
+cordenades_xarxes_BASINS <- list(max_distance_BASINS,mid_distance_BASINS, mid_mid_distance_BASINS,small_distance_BASINS,min_distance_BASINS)
+
+GRAPH_xarxes_fluvial <- list()
+all_lakes_BASINS_fluvial <- list()
+correspondence_BASINS_fluvial <- list()
+
+par(mar=c(0,0,0,0), mfrow=c(3,2))
+detach("package:sna", unload = TRUE)
+library(igraph)  
+library(shp2graph)
+for (y in 1:length(cordenades_xarxes_BASINS)) {
+  correspondence_BASINS <- c()
+  for (a in 1:55) {
+    correspondence_BASINS[a] <- which(round(cordenades_xarxes[[y]][(nrow(cordenades_xarxes[[y]])-55+a),1],4)==round(cordenades_xarxes_BASINS[[y]][,1],4))  
+  }
+  correspondence_BASINS_fluvial[[y]] <- correspondence_BASINS
+  # We rewrite "ptsxy" with the converted coordinates to lat/long
+  ptsxy <- coordinates(cordenades_xarxes_BASINS[[y]])
+  
+  #   Load the river shapefile. This shapefil is the entire basin of the Ebre river. 
+  # Extracted from https://www.hydrosheds.org/downloads where we obtained the catchments and rivers
+  # shapefile and filtered the corresponding Ebre basin. 
+  shape_Rivers <- st_read("GIS_data/Rivers_BASINS.shp")
+  shape_Rivers2 <- as(shape_Rivers, "Spatial")
+  #plot(shape_Rivers2)
+  
+  # With the points2network we find which points of the shapefile are closer to our points (ptsxy).
+  # Thus, we generate a vector of IDs of which nodes of the shape correspond to each point in the ptsxy
+  # approach=1 searches the closer "node" to the desired point. 
+  # approach=2 relocates the points as new network nodes (adds new nodes)-> Not recomended as then it is difficult to 
+  #work with the values related with the graph... there are no equivalences...
+  res.nv <- points2network(ntdata = shape_Rivers2, pointsxy= ptsxy, ELComputed = TRUE,approach = 1)
+  # Checking the correspondence between points and their corresponding nodes
+  #ptsinnt.view(ntdata = shape_Rivers2, nodelist = res.nv[[1]], pointsxy = ptsxy, CoorespondIDs= res.nv[[3]])
+
+  # Generate the vector with the nodes "IDs" that correspond to our sampling points
+  # Check this vector
+  all_lakes_BASINS_fluvial[[y]] <- unlist(res.nv[[3]])
+  
+  # Now that we have the list of nodes that correspond to our sampling points. Let's built de graph and play a bit: 
+  # Shape to igraph -> every segment is converted to a central "node" and their corresponding "edges"
+  rtNEL1 <-readshpnw(shape_Rivers2,ELComputed = T)
+  
+  # Now we generate the strict graph
+  GRAPH_xarxes_fluvial[[y]] <- nel2igraph(nodelist = rtNEL1[[2]],edgelist = rtNEL1[[3]],Directed = T,weight = rtNEL1[[4]])
+  
+  # ConComp = components(GRAPH_xarxes_fluvial[[y]])
+  # cols <-ConComp$membership 
+  # cols[unlist(res.nv[[3]])[correspondence_BASINS]] <- "red"
+  # cols <- ifelse(cols==1, "green",ifelse(cols==2,"blue","red"))
+  # sizes <- ifelse(cols=="red",10,1)
+  #  plot(GRAPH_xarxes_fluvial[[y]], vertex.label = NA, vertex.size = sizes, vertex.size2 = sizes, vertex.color=cols,
+  #      edge.width=0.01, edge.color="grey50")
+}
+#dev.print(png, file = "C:/Users/Cunilleramontcusi/myplot.png", width = 20000, height = 17000, res=500)
+
 
 ##########################################
 ##########################################
@@ -642,7 +704,7 @@ dev.off()
 ##########################################
 ##########################################
 
-# Calculation of network data for the 55 lakes (closeness, degree, between)
+# Calculation of network data for the 55 lakes (closeness, degree, between, evcent, subgraph centrality)
 library(igraph)
 network_data <- list()
 for (i in 1:length(MAPS_xarxes)) {
@@ -661,9 +723,22 @@ for (i in 1:length(MAPS_xarxes)) {
   colnames(network_data[[i]]) <- c("clo_ALPS","Sub_centr_ALPS","deg_ALPS","Eigvec_cent_ALPS","bet_ALPS")
 }
 
-# Saving the list with the FIVE matrices with the netwaork values 
-save(network_data, file = "S16-values/network_dataset.RData")
+fluvial_network_data <- list()
+for (i in 1:length(GRAPH_xarxes_fluvial)) {
+  output <- matrix(nrow = length(V(GRAPH_xarxes_fluvial[[i]])), ncol = 3)
+  
+  fluvial_network_data[[i]] <- output
+  
+  fluvial_network_data[[i]][,1] <- closeness(GRAPH_xarxes_fluvial[[i]], mode = "out")
+  fluvial_network_data[[i]][,2] <- degree(GRAPH_xarxes_fluvial[[i]],mode = "out")
+  fluvial_network_data[[i]][,3] <- betweenness(GRAPH_xarxes_fluvial[[i]])
 
+  colnames(fluvial_network_data[[i]]) <- c("clo_ALPS","deg_ALPS","bet_ALPS")
+}
+
+# Saving the list with the FIVE matrices with the network values 
+save(network_data, file = "S16-values/network_dataset.RData")
+save(fluvial_network_data, file = "S16-values/fluvial_network_dataset.RData")
 
 library(ggfortify)
 PCA_network_results <- list()
@@ -700,6 +775,40 @@ grid.arrange(autoplot(PCA_network_plot[[1]],loadings=T, loadings.label = TRUE, l
                       theme_bw(),  
              ncol = 2, nrow=3)
 
+
+library(ggfortify)
+PCA_fluvial_network_results <- list()
+PCA_fluvial_network_plot<- list()
+for (r in 1:length(MAPS_xarxes)) {
+  PCA_fluvial_result <- prcomp(fluvial_network_data[[r]], center = T, scale. = T)
+  PCA_fluvial_network_plot[[r]] <- PCA_fluvial_result
+  PCA_fluvial_network_results[[r]] <-PCA_fluvial_result$x[,1]
+}
+names(PCA_fluvial_network_results) <- c("max_PCA_fluvial_network","mid_PCA_fluvial_network","mid_mid_PCA_fluvial_network",
+                                        "small_fluvial_PCA_network","min_PCA_fluvial_network")
+
+grid.arrange(autoplot(PCA_fluvial_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+                      loadings.colour = 'red', loadings.label.colour="black")+
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
+               theme_bw(), 
+             autoplot(PCA_fluvial_network_plot[[2]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+                      loadings.colour = 'red', loadings.label.colour="black")+
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~300km")+
+               theme_bw(),
+             autoplot(PCA_fluvial_network_plot[[3]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+                      loadings.colour = 'red', loadings.label.colour="black")+
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~100km")+
+               theme_bw(),
+             autoplot(PCA_fluvial_network_plot[[4]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+                      loadings.colour = 'red', loadings.label.colour="black")+
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~60km")+
+               theme_bw(),
+             autoplot(PCA_fluvial_network_plot[[5]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+                      loadings.colour = 'red', loadings.label.colour="black")+
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~6km")+
+               theme_bw(),  
+             ncol = 2, nrow=3)
+
 ##########################################
 ##########################################
 ##########                      ##########
@@ -714,24 +823,6 @@ community_indices<- list()
 
 # Calculate the fitted values according to "The method" 
 ### FITTINGS OF OBSERVED VS FITTEDS WITH CCA AND DBRDA
-
-# dbRDA
-library(vegan)
-tst_coeficient_out <- list()
-for (r in 1:4) {
-  ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
-  dbRDA1<-capscale(comm_data[[r]]~as.matrix(env_data[[r]][,4:6]), distance = "jaccard",add = "lingoes") # JACCARD
-  # Fitteds - the prediction of the CCA fails with random samples (do not meet the pattern)
-  fitteds <- fitted(dbRDA1, model="CCA", type= "response")
-  tst_coeficient <- c()
-  for (e in 1:nrow(comm_data[[r]])) {
-    tst_coeficient[e] <- cor(as.matrix(fitteds)[e,-e],as.matrix(vegdist(comm_data[[r]], method = "jaccard"))[e,-e])# JACCARD
-  }
-  tst_coeficient_out[[r]] <- tst_coeficient
-}
-community_indices[[1]] <- tst_coeficient_out
-names(community_indices[[1]]) <- c("dbRDA fit/ob_S16","dbRDA fit/ob_S18","dbRDA fit/ob_PHY","dbRDA fit/ob_ZOO") 
-
 # CCA
 tst_coeficient_out <- list()
 for (r in 1:4) {
@@ -739,12 +830,12 @@ for (r in 1:4) {
   fitteds <- fitted(cca1, model="CCA", type= "response")
   coeffici <- c()
   for (e in 1:nrow(comm_data[[r]])) {
-    coeffici[e] <- cor(fitteds[e,],as.numeric(comm_data[[r]][e,]))
+    coeffici[e] <- cor(fitteds[e,],as.numeric(comm_data[[r]][e,]),method = "pearson")
   }
   tst_coeficient_out[[r]] <- coeffici
 }
-community_indices[[2]] <- tst_coeficient_out
-names(community_indices[[2]]) <- c("CCA fit/ob_S16","CCA fit/ob_S18","CCA fit/ob_PHY","CCA fit/ob_ZOO") 
+community_indices[[1]] <- tst_coeficient_out
+names(community_indices[[1]]) <- c("CCA fit/ob_S16","CCA fit/ob_S18","CCA fit/ob_PHY","CCA fit/ob_ZOO") 
 
 # ALPHA DIVERSITY
 # Richness
@@ -754,31 +845,10 @@ for (r in 1:4) {
   rich <- apply(comm_data[[r]],1,sum)
   tst_coeficient_out[[r]] <- rich
 }
-community_indices[[3]] <- tst_coeficient_out
-names(community_indices[[3]])<- c("Rich_S16","Rich_S18","Rich_PHY","Rich_ZOO") 
+community_indices[[2]] <- tst_coeficient_out
+names(community_indices[[2]])<- c("Rich_S16","Rich_S18","Rich_PHY","Rich_ZOO") 
 
-#### Need to retransform the data to ABUNDANCES!!!!!__________________________________#
-# Shannon-Wiener (only with ABUNDANCE DATA)
-#detach("package:igraph", unload = TRUE)
-#library(vegan)
-#tst_coeficient_out <- list()
-#for (r in 1:3) {
-#  ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
-#  shann <- diversity(comm_data[[r]],index = "shannon")
-#  tst_coeficient_out[[r]] <- shann
-#}
-## Evenness 
-#detach("package:igraph", unload = TRUE)
-#library(vegan)
-#tst_coeficient_out <- list()
-#for (r in 1:3) {
-#  ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
-#  shann <- diversity(comm_data[[r]],index = "shannon")
-#  J <- shann/log(specnumber(comm_data[[r]]))
-#  tst_coeficient_out[[r]] <- J
-#}
-#### Need to retransform the data to PRESENCE/ABSENCE!!!!!__________________________________#
-
+# BETA DIVERSITY
 # LCBD
 library(tidyr)
 library(betareg)
@@ -791,8 +861,8 @@ for (r in 1:4) {
   LCBD_values <- beta.div(comm_data[[r]], method = "jaccard", nperm = 9999)
   tst_coeficient_out[[r]] <- LCBD_values$LCBD
 }
-community_indices[[4]] <- tst_coeficient_out
-names(community_indices[[4]])<- c("LCBD_S16","LCBD_S18","LCBD_PHY","LCBD_ZOO") 
+community_indices[[3]] <- tst_coeficient_out
+names(community_indices[[3]])<- c("LCBD_S16","LCBD_S18","LCBD_PHY","LCBD_ZOO") 
 
 # Betadiversity components
 tst_coeficient_out <- list()
@@ -801,47 +871,136 @@ for (r in 1:4) {
   taxa.q_Ruziska_AB <- beta.div.comp(comm_data[[r]], coef = "J", quant = TRUE)
   replacemnet <- apply(as.matrix(taxa.q_Ruziska_AB$repl),1,mean)
   rich_diff <- apply(as.matrix(taxa.q_Ruziska_AB$rich),1,mean)
-  jaccard <- apply(as.matrix(taxa.q_Ruziska_AB$D),1,mean)
-  beta_div_components <- cbind(jaccard,replacemnet,rich_diff)
+  beta_div_components <- cbind(replacemnet,rich_diff)
   tst_coeficient_out[[r]] <- beta_div_components
 }
 
-community_indices[[5]]<- list(tst_coeficient_out[[1]][,1], tst_coeficient_out[[2]][,1],
+community_indices[[4]]<- list(tst_coeficient_out[[1]][,1],tst_coeficient_out[[2]][,1],
                               tst_coeficient_out[[3]][,1], tst_coeficient_out[[4]][,1])
-names(community_indices[[5]])<- c("Jac_S16","Jac_S18","Jac_PHY","Jac_ZOO") 
-community_indices[[6]]<- list(tst_coeficient_out[[1]][,2],tst_coeficient_out[[2]][,2],
+names(community_indices[[4]])<- c("Repl_S16","Repl_S18","Repl_PHY","Repl_ZOO") 
+community_indices[[5]]<- list(tst_coeficient_out[[1]][,2],tst_coeficient_out[[2]][,2],
                               tst_coeficient_out[[3]][,2], tst_coeficient_out[[4]][,2])
-names(community_indices[[6]])<- c("Repl_S16","Repl_S18","Repl_PHY","Repl_ZOO") 
-community_indices[[7]]<- list(tst_coeficient_out[[1]][,3],tst_coeficient_out[[2]][,3],
-                              tst_coeficient_out[[3]][,3], tst_coeficient_out[[4]][,3])
-names(community_indices[[7]])<- c("RicDif_S16","RicDif_S18","RicDif_PHY","RicDif_ZOO") 
+names(community_indices[[5]])<- c("RicDif_S16","RicDif_S18","RicDif_PHY","RicDif_ZOO") 
 
 biod <- list()
 for (r in 1:4) {
   biod[[r]] <- cbind(community_indices[[1]][[r]],community_indices[[2]][[r]],community_indices[[3]][[r]],
-                     community_indices[[4]][[r]],community_indices[[5]][[r]],
-                     community_indices[[6]][[r]],community_indices[[7]][[r]])
+                     community_indices[[4]][[r]],community_indices[[5]][[r]])
   noms <-c(names(community_indices[[1]])[r],names(community_indices[[2]])[r],names(community_indices[[3]])[r],
-           names(community_indices[[4]])[r],names(community_indices[[5]])[r],
-           names(community_indices[[6]])[r],names(community_indices[[7]])[r]) 
+           names(community_indices[[4]])[r],names(community_indices[[5]])[r]) 
   colnames(biod[[r]]) <- noms
 } 
 biod
 
-#Saving diversity values used for ROBERT's presentation
+##########################################
+##########################################
+##########                      ##########
+##########  NET vs DIV VALUES   ##########
+##########                      ##########
+##########################################
+##########################################
 
-diversity_data <- list(biod[[1]][,c(3,4,6,7)],
-                       biod[[2]][,c(3,4,6,7)],
-                       biod[[3]][,c(3,4,6,7)],
-                       biod[[4]][,c(3,4,6,7)])
-names(diversity_data) <- c("S16","S18","phy","zoo")
-save(diversity_data, file = "S16-values/network_dataset.RData")
+# Extracting the values of which lakes have been sampled for each taxonomic group
+# S16 = 52 lakes
+# S18 = 48 lakes
+# Phy = 50 lakes
+# Zoo = 52 lakes
 
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
+coincidence <- c()
+coincidence_values <- list()
+for (r in 1:4) {
+  for (coinc in 1:nrow(all_lakes_coord)) {
+    coincidence_value <- 0
+    coincidence_value<-which(rownames(all_lakes_coord)==rownames(env_data[[r]])[coinc])
+    coincidence_value<-ifelse(length(coincidence_value)==0, 0 ,coincidence_value)
+    coincidence[coinc] <- coincidence_value
+  }  
+  coincidence_values[[r]] <- coincidence
+}
+
+
+for (groups in 1:4) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red")
+  for (net in 1:5) {
+    coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
+    dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                     biod[[groups]][,1:6])
+    colnames(dataset)[1] <-c("Network")
+    plots_grups <- list()
+  for(var in 1:5){
+      #p.val <- cor.test(dataset[,1],dataset[,var+1])[3]
+      p.val <- summary(lm(dataset[,1]~dataset[,var+1]))[[4]][2,4]
+      if(p.val>0.05){
+        plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
+                                                 y=as.data.frame(dataset)[,var+1]))+
+          geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+          geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+
+          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+          theme_classic()
+      }else{
+        plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
+                                                 y=as.data.frame(dataset)[,var+1]))+
+          geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+          geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+
+          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+          theme_classic()
+        }
+      }
+    
+  png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",names(PCA_biod_results)[[groups]],"_",names(PCA_network_results)[[net]],".png"),
+      width =582*2 ,height =629*2 ,units ="px",res = 200)
+  grid.arrange(plots_grups[[1]],plots_grups[[2]],
+               plots_grups[[3]],plots_grups[[4]],
+               plots_grups[[5]],
+               ncol=3,nrow=3, top=names(PCA_network_results)[[net]])
+  dev.off()
+ }
+}             
+
+
+
+PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
+
+for (groups in 1:4) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red")
+  for (net in 1:5) {
+    coin <- PCA_fluvial_network_results[[net]][all_lakes_BASINS_fluvial[[net]][correspondence_BASINS_fluvial[[net]]]]
+    dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                     biod[[groups]][,1:6])
+    colnames(dataset)[1] <-c("Network")
+    plots_grups <- list()
+    for(var in 1:5){
+      #p.val <- cor.test(dataset[,1],dataset[,var+1])[3]
+      p.val <- summary(lm(dataset[,1]~dataset[,var+1]))[[4]][2,4]
+      if(p.val>0.05){
+        plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
+                                                        y=as.data.frame(dataset)[,var+1]))+
+          geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+          geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+
+          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+          theme_classic()
+      }else{
+        plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
+                                                        y=as.data.frame(dataset)[,var+1]))+
+          geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+          geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+
+          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+          theme_classic()
+      }
+    }
+    
+    png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",names(PCA_biod_results)[[groups]],"_",names(PCA_network_results)[[net]],".png"),
+        width =582*2 ,height =629*2 ,units ="px",res = 200)
+    grid.arrange(plots_grups[[1]],plots_grups[[2]],
+                 plots_grups[[3]],plots_grups[[4]],
+                 plots_grups[[5]],
+                 ncol=3,nrow=3, top=names(PCA_network_results)[[net]])
+    dev.off()
+  }
+}             
+
 # PCA_approach __________________________________________________________________________________________####
+
 
 PCA_biod_results <- list()
 PCA_biod_plots <- list()
@@ -869,23 +1028,6 @@ grid.arrange(autoplot(PCA_biod_plots[[1]],loadings=T, loadings.label = TRUE, loa
                geom_point(size=2, alpha=0.4,color=CUNILLERA_cols("red"))+labs(title="Zooplankton")+
                theme_bw(), 
              ncol = 2, nrow=2)
-
-
-##########################################
-##########################################
-##########                      ##########
-##########  NET vs DIV VALUES   ##########
-##########                      ##########
-##########################################
-##########################################
-
-
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-# PCA_approach __________________________________________________________________________________________####
-
 # Extracting the values of which lakes have been sampled for each taxonomic group
 # S16 = 52 lakes
 # S18 = 48 lakes
@@ -906,125 +1048,57 @@ for (r in 1:4) {
 
 
 for (groups in 1:4) {
-plots_grups <- list()
-color_groups <- CUNILLERA_cols("yellow","blue","green","red")
-names_networks <- c("~600km","~300km","~100km","~60km","~6km")
-noms_groups <- c("Bacteria S16","Protista S18","Phytoplankton","Zooplankton")
-for (net in 1:5) {
-  coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
-  dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
-          PCA_biod_results[[groups]][,1:2])
-  colnames(dataset) <-c("Network","Div_PC1","Div_PC2")
-
-p.val_1 <- cor.test(dataset[,1],dataset[,2])[3]
-if (p.val_1>0.05) {
-  plots_grups[[net]] <-ggplot(dataset, aes(x=Network, y=Div_PC1))+
-  geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
-  geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+labs(title=names_networks[net])+
-  theme_bw()
-}else{
-  plots_grups[[net]] <-ggplot(dataset, aes(x=Network, y=Div_PC1))+
-  geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
-  geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+labs(title=names_networks[net])+
-  theme_bw()
-}
-
-p.val_2 <- cor.test(dataset[,1],dataset[,3])[3]
-if (p.val_2>0.05) {
-  plots_grups[[net+5]] <-ggplot(dataset, aes(x=Network, y=Div_PC2))+
-    geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
-    geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+labs(title=names_networks[net])+
-    theme_bw()
-}else{
-  plots_grups[[net+5]] <-ggplot(dataset, aes(x=Network, y=Div_PC2))+
-    geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
-    geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+labs(title=names_networks[net])+
-    theme_bw()
-}
-
-}
-png(filename =paste("C:/Users/Cunilleramontcusi/","PCA",names(PCA_biod_results)[[groups]],".png"),
-    width =582*2 ,height =729*2 ,units ="px",res = 200)
-grid.arrange(plots_grups[[1]],plots_grups[[6]],
-             plots_grups[[2]],plots_grups[[7]],
-             plots_grups[[3]],plots_grups[[8]],
-             plots_grups[[4]],plots_grups[[9]],
-             plots_grups[[5]],plots_grups[[10]],
-             ncol=2,nrow=5,top=noms_groups[groups])
-dev.off()
-}             
-
-
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-###____###____###____###____###____###____###____###____###____###____###____###____###____###____###____###
-# NON PCA_approach ______________________________________________________________________________________####
-
-# Extracting the values of which lakes have been sampled for each taxonomic group
-# S16 = 52 lakes
-# S18 = 48 lakes
-# Phy = 50 lakes
-# Zoo = 52 lakes
-
-coincidence <- c()
-coincidence_values <- list()
-for (r in 1:4) {
-  for (coinc in 1:nrow(all_lakes_coord)) {
-    coincidence_value <- 0
-    coincidence_value<-which(rownames(all_lakes_coord)==rownames(env_data[[r]])[coinc])
-    coincidence_value<-ifelse(length(coincidence_value)==0, 0 ,coincidence_value)
-    coincidence[coinc] <- coincidence_value
-  }  
-  coincidence_values[[r]] <- coincidence
-}
-
-
-for (groups in 1:4) {
+  plots_grups <- list()
   color_groups <- CUNILLERA_cols("yellow","blue","green","red")
+  names_networks <- c("~600km","~300km","~100km","~60km","~6km")
+  noms_groups <- c("Bacteria S16","Protista S18","Phytoplankton","Zooplankton")
   for (net in 1:5) {
     coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
     dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
-                     biod[[groups]][,1:7])
-    colnames(dataset)[1] <-c("Network")
-    plots_grups <- list()
-  for(var in 1:7){
-      p.val <- cor.test(dataset[,1],dataset[,var+1])[3]
-      #p.val <- summary(lm(dataset[,1]~dataset[,var+1]))[[4]][2,4]
-      if(p.val>0.05){
-        plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
-                                                 y=as.data.frame(dataset)[,var+1]))+
-          geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
-          geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+
-          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
-          theme_classic()
-      }else{
-        plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
-                                                 y=as.data.frame(dataset)[,var+1]))+
-          geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
-          geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+
-          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
-          theme_classic()
-        }
-      }
+                     PCA_biod_results[[groups]][,1:2])
+    colnames(dataset) <-c("Network","Div_PC1","Div_PC2")
     
-  png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",names(PCA_biod_results)[[groups]],"_",names(PCA_network_results)[[net]],".png"),
-      width =582*2 ,height =629*2 ,units ="px",res = 200)
-  grid.arrange(plots_grups[[1]],plots_grups[[2]],
-               plots_grups[[3]],plots_grups[[4]],
-               plots_grups[[5]],plots_grups[[6]],
-               plots_grups[[7]],
-               ncol=3,nrow=3, top=names(PCA_network_results)[[net]])
+    p.val_1 <- cor.test(dataset[,1],dataset[,2])[3]
+    if (p.val_1>0.05) {
+      plots_grups[[net]] <-ggplot(dataset, aes(x=Network, y=Div_PC1))+
+        geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+labs(title=names_networks[net])+
+        theme_bw()
+    }else{
+      plots_grups[[net]] <-ggplot(dataset, aes(x=Network, y=Div_PC1))+
+        geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+labs(title=names_networks[net])+
+        theme_bw()
+    }
+    
+    p.val_2 <- cor.test(dataset[,1],dataset[,3])[3]
+    if (p.val_2>0.05) {
+      plots_grups[[net+5]] <-ggplot(dataset, aes(x=Network, y=Div_PC2))+
+        geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+labs(title=names_networks[net])+
+        theme_bw()
+    }else{
+      plots_grups[[net+5]] <-ggplot(dataset, aes(x=Network, y=Div_PC2))+
+        geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+labs(title=names_networks[net])+
+        theme_bw()
+    }
+    
+  }
+  png(filename =paste("C:/Users/Cunilleramontcusi/","PCA",names(PCA_biod_results)[[groups]],".png"),
+      width =582*2 ,height =729*2 ,units ="px",res = 200)
+  grid.arrange(plots_grups[[1]],plots_grups[[6]],
+               plots_grups[[2]],plots_grups[[7]],
+               plots_grups[[3]],plots_grups[[8]],
+               plots_grups[[4]],plots_grups[[9]],
+               plots_grups[[5]],plots_grups[[10]],
+               ncol=2,nrow=5,top=noms_groups[groups])
   dev.off()
- }
 }             
 
 
-
-
-
-
   
+
 
 
 

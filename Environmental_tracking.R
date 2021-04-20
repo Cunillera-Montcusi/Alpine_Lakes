@@ -320,3 +320,37 @@ grid.arrange(s16_dbRDA[[2]],s16_CCA[[2]],
 dev.off()
 
 
+All.longitudes <- list(env.16S$lon, env.18S$lon, env.phy$lon, env.zoo$lon,
+                        env$Longitude, env$Longitude[-5], env$Longitude, pred$lon)
+All.latitudes <- list(env.16S$lat, env.18S$lat, env.phy$lat, env.zoo$lat,
+                       env$Latitude, env$Latitude[-5], env$Latitude, pred$lat)
+titles.list <- c("Alp_S16","Alp_S18","Alp_PHYT","Alp_ZOO","Norw_Fish","Norw_ZOO","Norw_Phy","Soda")
+
+# dbRDA correlations
+par(mfrow=c(4,4))
+for (w in 1:8) {
+  plot(All.longitudes[[w]],output_dbRDA[[w]], main = titles.list[w], xlab = "Longitude")
+  plot(All.latitudes[[w]],output_dbRDA[[w]], main = titles.list[w], xlab = "Latitude")
+}
+# CCA correlations
+par(mfrow=c(4,4))
+for (w in 1:8) {
+  plot(All.longitudes[[w]],output_CCA[[w]], main = titles.list[w], xlab = "Longitude")
+  plot(All.latitudes[[w]],output_CCA[[w]], main = titles.list[w], xlab = "Latitude")
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

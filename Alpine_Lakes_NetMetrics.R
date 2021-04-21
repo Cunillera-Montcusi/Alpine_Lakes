@@ -29,7 +29,6 @@ library(stars) # Other packages to deal with geospatial data
 library(ggspatial) # Other packages to deal with geospatial data 
 library(foreign) # Work with dbf files
 library(rgdal) # upload and treat spatial data
-library(shp2graph) # convert shape to grpah
 
 # Plots to obtain a gg network plot
 library(GGally)
@@ -63,16 +62,18 @@ load("S16-values/env.16S.Rdata")
 com.16S <- com
 env.16S <- env 
 # select OTUS with min occurence of 10 sites (=exclude rare OTUs)
-seltax<-which(colSums(com.16S>0)>9)
-com_S16<-com.16S[,seltax]
+seltax<-which(apply(com.16S,2,sum)>10)
+com.16S<-com.16S[,seltax]
 
 ##### 18S bacterial plankton
-load("S16-values/com.18S.Rdata")
+load("S16-values/S18.prot.Rdata")
 load("S16-values/env.18S.Rdata")
 com.18S <- com
 env.18S <- env 
 # select OTUS with min occurence of 10 sites (=exclude rare OTUs)
-seltax<-which(colSums(com.18S>0)>9)
+com.18S <-com.18S[-c(9,13,25,28,39),] 
+env.18S <- env.18S[-c(1,39),] 
+seltax<-which(apply(com.18S,2,sum)>10)
 com.18S<-com.18S[,seltax]
 
 ##### Phytoplankton bacterial plankton
@@ -80,15 +81,29 @@ load("S16-values/com.phyt.Rdata")
 load("S16-values/env.phyt.Rdata")
 com.phy <- com
 env.phy <- env 
-# select OTUS with min occurence of 2 sites (=exclude rare OTUs)
-seltax<-which(colSums(com.phy>0)>1)
+# select spp with min occurence of 3 sites (=exclude rare OTUs)
+seltax<--which(apply(com.phy,2,sum)>3)
 com.phy<-com.phy[,seltax]
 
-##### Zooplankton bacterial plankton
+##### Zooplankton 
 load("S16-values/com.zoo.Rdata")
 load("S16-values/env.zoo.Rdata")
 com.zoo <- com
 env.zoo <- env 
+# select spp with min occurence of 3 sites (=exclude rare OTUs)
+seltax<-which(apply(com.zoo,2,sum)>3)
+com.zoo<-com.zoo[,seltax]
+
+##### 18S bacterial zooplankton
+load("S16-values/S18.zoo.Rdata")
+load("S16-values/env.18S.Rdata")
+com.18S.zoo <- com
+env.18S.zoo <- env 
+# select OTUS with min occurence of 10 sites (=exclude rare OTUs)
+com.18S.zoo <-com.18S.zoo[-c(9,13,25,28,39),]
+env.18S.zoo <- env.18S.zoo[-c(1,39),] 
+seltax<-which(apply(com.18S.zoo,2,sum)>3)
+com.18S.zoo<-com.18S.zoo[,seltax]
 
 #_______________________________________________________________###
 # IF you want a check with PA DATA run the following: 
@@ -97,16 +112,16 @@ com.16S <- ifelse(com.16S>0,1,0)
 com.18S <- ifelse(com.18S>0,1,0)
 com.phy <- ifelse(com.phy>0,1,0)
 com.zoo <- ifelse(com.zoo>0,1,0)
+com.18S.zoo <- ifelse(com.18S.zoo>0,1,0)
 #_______________________________________________________________###
 
-
 # Data preparation and list building 
-list.names <- c("S16", "S18", "phyto", "zoo")
-comm_data<- list(com.16S, com.18S, com.phy, com.zoo)
+list.names <- c("S16", "S18", "phyto", "zoo", "18S.zoo")
+comm_data<- list(com.16S, com.18S, com.phy, com.zoo, com.18S.zoo)
 names(comm_data) <-list.names 
 
-list.names.env <- c("env.S16", "env.S18", "env.phyto", "env.zoo")
-env_data<- list(env.16S, env.18S, env.phy, env.zoo)
+list.names.env <- c("env.S16", "env.S18", "env.phyto", "env.zoo", "env.18S.zoo")
+env_data<- list(env.16S, env.18S, env.phy, env.zoo, env.18S.zoo)
 names(env_data) <-list.names.env 
 #_______________________________________________________________###
 
@@ -180,6 +195,20 @@ env_data[[s]][out[-which(is.na(out))],2] <- corr_LongLat$lon[which(is.na(out)==F
 env_data[[s]][out[-which(is.na(out))],3] <- corr_LongLat$lat[which(is.na(out)==FALSE)]
 plot(env_data[[s]][out[-which(is.na(out))],2],env_data[[s]][out[-which(is.na(out))],3], col="red")
 
+s <- 5
+out <- c()
+out[1] <- which(as.character(env_data[[s]][,1])==as.character(corr_LongLat$lake)[1])
+out[2] <- which(as.character(env_data[[s]][,1])==as.character(corr_LongLat$lake)[2])
+out[3] <- which(as.character(env_data[[s]][,1])==as.character(corr_LongLat$lake)[3])
+out[4] <- which(as.character(env_data[[s]][,1])==as.character(corr_LongLat$lake)[4])
+out[5] <- which(as.character(env_data[[s]][,1])==as.character(corr_LongLat$lake)[5])
+out[6] <- NA
+
+par(mfrow=c(1,2))
+plot(env_data[[s]][out[-which(is.na(out))],2],env_data[[s]][out[-which(is.na(out))],3])
+env_data[[s]][out[-which(is.na(out))],2] <- corr_LongLat$lon[which(is.na(out)==FALSE)]
+env_data[[s]][out[-which(is.na(out))],3] <- corr_LongLat$lat[which(is.na(out)==FALSE)]
+plot(env_data[[s]][out[-which(is.na(out))],2],env_data[[s]][out[-which(is.na(out))],3], col="red")
 
 #_________________________________________________________________________________________________####
 #_____________________________________________________________________________________________________
@@ -287,110 +316,110 @@ dat1<-data.frame(lon=all_lakes_coord[,1], lat=all_lakes_coord[,2], sampled=1)
 ## [[2]]= A distance matrix of all the lakes beteen each other in meters 
 
 Lakes_buffer <- function(EU_lakes, Samp_lakes, buffer_distance, check_EU_Sampl_plots=F, check_BUFFER_plots=F,check_ELIMINATION_goodLAKES_plots=F){
-
-# Calculating the corresponding sites of the global lakes database 
-dist.between.lakes <- dist(rbind(EU_lakes,Samp_lakes[,1:2]),method = "euclidean" )
-# Extraction of the closest point to each lake
-corr.lakes <- c()
-checking.value<- c()
-for (i in 1:nrow(Samp_lakes)) {
-  corresponding.lake <- which(as.matrix(dist.between.lakes)[nrow(EU_lakes)+i,]==
-                                min(as.matrix(dist.between.lakes)[nrow(EU_lakes)+i,][1:nrow(EU_lakes)]))
-  checking.value[i] <- min(as.matrix(dist.between.lakes)[nrow(EU_lakes)+i,][1:nrow(EU_lakes)])
-  corr.lakes[i]<- rownames(EU_lakes[corresponding.lake,])
-}
-corr.lakes
-checking.value
-the.good.lakes <- c()
-for (e in 1:length(corr.lakes)) {
-  the.good.lakes[e] <- which(rownames(EU_lakes)==corr.lakes[e])
-}
-#The good lakes are the rows of the "EU_lakes" dataset that correspond to the lakes
-
-###________________________
-# Plots checking if the coordinates of the selected lakes are right or not. 
-if (check_EU_Sampl_plots==T) {
-par(mfrow=c(1,2))
-plot(EU_lakes[the.good.lakes,1],Samp_lakes[,1])
-abline(a=0,b=1, col="red")
-plot(EU_lakes[the.good.lakes,2],Samp_lakes[,2])
-abline(a=0,b=1, col="red")
-par(mfrow=c(1,1))  
-# Plot the whole dataset of points
-#plot(EU_lakes$lon, EU_lakes$lat)    
-}
-
-# Transforming to sf format
-lakes_sw <- st_as_sf(EU_lakes, coords = c("lon","lat"))
-# Convert to "old" format to caluclate to distances
-lakes_sw_sp <- as(lakes_sw, "Spatial")
-# Calculate the distance matrix (in METRES!!!)
-dist_lakes <- distm(lakes_sw_sp, fun = distGeo)
-
-#Calculate all the distances between the smapled lakes
-dist.between.the.good.lakes <- dist_lakes[the.good.lakes,the.good.lakes]
-#dist.between.the.good.lakes <- dist.between.the.good.lakes/2
-# Transform EU_lakes into a new object (just security)
-dat_0 <- EU_lakes
-# Add a third column informing the current order for being able to detect known nodes
-dat_0[,3] <- seq(from=1, to = nrow(EU_lakes), by = 1)
-
-# Let's extract the nodes identities that are wihtin a range of the sampled lakes
-# We build a buffer based on the maximum distance between the sampled lakes: max(dist.between.the.good.lakes)
-datum <- list()
-dat_total <- NULL
-for (f in 1:length(the.good.lakes)) {
-  datum[[f]]<- dat_0[-c(which(dist_lakes[the.good.lakes[f],]>max(dist.between.the.good.lakes)/buffer_distance)),]
-  dat_total <- rbind(dat_total,datum[[f]])
-}
-# There are duplicates so we collapse these values with "unique"
-dat_final <- unique(dat_total)
-
-if (check_BUFFER_plots==T) {
-#Check versus other unique plots (built with the "buffer" around an specific lake)
-par(mfrow=c(2,3))
-plot(dat_0[-c(which(dist_lakes[the.good.lakes[1],]>max(dist.between.the.good.lakes)/buffer_distance)),1:2])
-plot(dat_0[-c(which(dist_lakes[the.good.lakes[52],]>max(dist.between.the.good.lakes)/buffer_distance)),1:2])
-plot(dat_final[,1:2])
-
-#Check versus unique/total. The same plot but with less nodes should be observed
-plot(dat_final[,1:2])
-plot(dat_total[,1:2])
-
-#Check the distances, shoulg be shorter in "final" 
-barplot(c(nrow(dat_final), nrow(dat_total)))
-par(mfrow=c(1,1))
-}
-
-# Out is the "new" rows of "the.good.lakes"
-out <- c()
-for (ff in 1:length(the.good.lakes)) {
-  out[ff] <- which(dat_final[,3]==dat_0[the.good.lakes,3][ff])
-}
-out
-
-if (check_ELIMINATION_goodLAKES_plots==T) {
-# We check that we are eliminating some of the lakes (the sampled ones)
-par(mfrow=c(1,2))
-plot(dat_final[,1:2])
-plot(dat_final[-out,1:2])
-par(mfrow=c(1,1))
-}
-
-# We deffinetly extract the good lakes values (lack of precision for them)
-dat_buffer <- dat_final[-c(out),]
-
-#Adding the real coordinates of the lakes (this is done because some of them were too close to one another)
-dat_corr <- rbind(dat_buffer[,1:2], all_lakes_coord[,1:2])
-#plot(dat_corr)
-# Transforming to sf format
-lakes_sw <- st_as_sf(dat_corr, coords = c("lon","lat"))
-# Convert to "old" format to caluclate to distances
-lakes_sw_sp <- as(lakes_sw, "Spatial")
-# Calculate the distance matrix (in METRES!!!)
-dist_lakes <- distm(lakes_sw_sp, fun = distGeo)
-
-function_result <- list(dat_corr,dist_lakes)
+  
+  # Calculating the corresponding sites of the global lakes database 
+  dist.between.lakes <- dist(rbind(EU_lakes,Samp_lakes[,1:2]),method = "euclidean" )
+  # Extraction of the closest point to each lake
+  corr.lakes <- c()
+  checking.value<- c()
+  for (i in 1:nrow(Samp_lakes)) {
+    corresponding.lake <- which(as.matrix(dist.between.lakes)[nrow(EU_lakes)+i,]==
+                                  min(as.matrix(dist.between.lakes)[nrow(EU_lakes)+i,][1:nrow(EU_lakes)]))
+    checking.value[i] <- min(as.matrix(dist.between.lakes)[nrow(EU_lakes)+i,][1:nrow(EU_lakes)])
+    corr.lakes[i]<- rownames(EU_lakes[corresponding.lake,])
+  }
+  corr.lakes
+  checking.value
+  the.good.lakes <- c()
+  for (e in 1:length(corr.lakes)) {
+    the.good.lakes[e] <- which(rownames(EU_lakes)==corr.lakes[e])
+  }
+  #The good lakes are the rows of the "EU_lakes" dataset that correspond to the lakes
+  
+  ###________________________
+  # Plots checking if the coordinates of the selected lakes are right or not. 
+  if (check_EU_Sampl_plots==T) {
+    par(mfrow=c(1,2))
+    plot(EU_lakes[the.good.lakes,1],Samp_lakes[,1])
+    abline(a=0,b=1, col="red")
+    plot(EU_lakes[the.good.lakes,2],Samp_lakes[,2])
+    abline(a=0,b=1, col="red")
+    par(mfrow=c(1,1))  
+    # Plot the whole dataset of points
+    #plot(EU_lakes$lon, EU_lakes$lat)    
+  }
+  
+  # Transforming to sf format
+  lakes_sw <- st_as_sf(EU_lakes, coords = c("lon","lat"))
+  # Convert to "old" format to caluclate to distances
+  lakes_sw_sp <- as(lakes_sw, "Spatial")
+  # Calculate the distance matrix (in METRES!!!)
+  dist_lakes <- distm(lakes_sw_sp, fun = distGeo)
+  
+  #Calculate all the distances between the smapled lakes
+  dist.between.the.good.lakes <- dist_lakes[the.good.lakes,the.good.lakes]
+  #dist.between.the.good.lakes <- dist.between.the.good.lakes/2
+  # Transform EU_lakes into a new object (just security)
+  dat_0 <- EU_lakes
+  # Add a third column informing the current order for being able to detect known nodes
+  dat_0[,3] <- seq(from=1, to = nrow(EU_lakes), by = 1)
+  
+  # Let's extract the nodes identities that are wihtin a range of the sampled lakes
+  # We build a buffer based on the maximum distance between the sampled lakes: max(dist.between.the.good.lakes)
+  datum <- list()
+  dat_total <- NULL
+  for (f in 1:length(the.good.lakes)) {
+    datum[[f]]<- dat_0[-c(which(dist_lakes[the.good.lakes[f],]>max(dist.between.the.good.lakes)/buffer_distance)),]
+    dat_total <- rbind(dat_total,datum[[f]])
+  }
+  # There are duplicates so we collapse these values with "unique"
+  dat_final <- unique(dat_total)
+  
+  if (check_BUFFER_plots==T) {
+    #Check versus other unique plots (built with the "buffer" around an specific lake)
+    par(mfrow=c(2,3))
+    plot(dat_0[-c(which(dist_lakes[the.good.lakes[1],]>max(dist.between.the.good.lakes)/buffer_distance)),1:2])
+    plot(dat_0[-c(which(dist_lakes[the.good.lakes[52],]>max(dist.between.the.good.lakes)/buffer_distance)),1:2])
+    plot(dat_final[,1:2])
+    
+    #Check versus unique/total. The same plot but with less nodes should be observed
+    plot(dat_final[,1:2])
+    plot(dat_total[,1:2])
+    
+    #Check the distances, shoulg be shorter in "final" 
+    barplot(c(nrow(dat_final), nrow(dat_total)))
+    par(mfrow=c(1,1))
+  }
+  
+  # Out is the "new" rows of "the.good.lakes"
+  out <- c()
+  for (ff in 1:length(the.good.lakes)) {
+    out[ff] <- which(dat_final[,3]==dat_0[the.good.lakes,3][ff])
+  }
+  out
+  
+  if (check_ELIMINATION_goodLAKES_plots==T) {
+    # We check that we are eliminating some of the lakes (the sampled ones)
+    par(mfrow=c(1,2))
+    plot(dat_final[,1:2])
+    plot(dat_final[-out,1:2])
+    par(mfrow=c(1,1))
+  }
+  
+  # We deffinetly extract the good lakes values (lack of precision for them)
+  dat_buffer <- dat_final[-c(out),]
+  
+  #Adding the real coordinates of the lakes (this is done because some of them were too close to one another)
+  dat_corr <- rbind(dat_buffer[,1:2], all_lakes_coord[,1:2])
+  #plot(dat_corr)
+  # Transforming to sf format
+  lakes_sw <- st_as_sf(dat_corr, coords = c("lon","lat"))
+  # Convert to "old" format to caluclate to distances
+  lakes_sw_sp <- as(lakes_sw, "Spatial")
+  # Calculate the distance matrix (in METRES!!!)
+  dist_lakes <- distm(lakes_sw_sp, fun = distGeo)
+  
+  function_result <- list(dat_corr,dist_lakes)
 }
 
 #
@@ -487,7 +516,7 @@ mid_distance_down <- mid_distance[[2]]
 #_______________________________________________________________________________________________________________###
 # Medium middle (MID_MID) distance between lakes -- 100 km approximately
 mid_mid_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance = 6, 
-                             check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
+                                 check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
 # We extract the distance matrix and save it to run it externally (accelerate computing times)
 mid_mid_distance_down <- mid_mid_distance[[2]]
 #save(mid_mid_distance_down, file = "S16-values/AlPS_lakes_percol_MID_MID_DISTANCE.RData")
@@ -516,7 +545,7 @@ mid_mid_distance_down <- mid_mid_distance[[2]]
 #_______________________________________________________________________________________________________________###
 # Small distance, A tenth of the maximum distance -- 60km approximately
 small_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance = 10, 
-                             check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
+                               check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
 ### WARNING! ###
 # Small computing times and the fact that the two "sub-networks" are now disconnected made us to treat them differently: 
 
@@ -598,12 +627,12 @@ MAPS_xarxes <- list(ALP_MAX_xarxa, ALP_MID_xarxa, ALP_MID_MID_xarxa, ALP_SMALL_x
 maps_Alps <- list()
 detach("package:igraph", unload = TRUE)
 for (e in 1:length(cordenades_xarxes)) {
-factors <- rep("No_Sampled",nrow(MAPS_xarxes[[e]]))
-factors[c(nrow(MAPS_xarxes[[e]])-54):nrow(MAPS_xarxes[[e]])] <- "Sampled"
-
+  factors <- rep("No_Sampled",nrow(MAPS_xarxes[[e]]))
+  factors[c(nrow(MAPS_xarxes[[e]])-54):nrow(MAPS_xarxes[[e]])] <- "Sampled"
+  
   n<- network(MAPS_xarxes[[e]], directed=F, diag=F)
   n %v% "family" <- factors # Family is an standard name for the categortical variable that we are creating 
-maps_Alps[[e]] <- ggplot(n, layout=as.matrix(cordenades_xarxes[[e]][,1:2]),
+  maps_Alps[[e]] <- ggplot(n, layout=as.matrix(cordenades_xarxes[[e]][,1:2]),
                            aes(x = x, y = y, xend = xend, yend = yend))+
     geom_edges( color = "grey45", alpha= 0.4) +
     geom_nodes(aes(fill=family, alpha=family), size=2 ,color="black", shape=21)+
@@ -645,55 +674,57 @@ GRAPH_xarxes_fluvial <- list()
 all_lakes_BASINS_fluvial <- list()
 correspondence_BASINS_fluvial <- list()
 
-par(mar=c(0,0,0,0), mfrow=c(3,2))
 detach("package:sna", unload = TRUE)
 library(igraph)  
 library(shp2graph)
-for (y in 1:length(cordenades_xarxes_BASINS)) {
-  correspondence_BASINS <- c()
-  for (a in 1:55) {
-    correspondence_BASINS[a] <- which(round(cordenades_xarxes[[y]][(nrow(cordenades_xarxes[[y]])-55+a),1],4)==round(cordenades_xarxes_BASINS[[y]][,1],4))  
-  }
-  correspondence_BASINS_fluvial[[y]] <- correspondence_BASINS
-  # We rewrite "ptsxy" with the converted coordinates to lat/long
-  ptsxy <- coordinates(cordenades_xarxes_BASINS[[y]])
-  
-  #   Load the river shapefile. This shapefil is the entire basin of the Ebre river. 
-  # Extracted from https://www.hydrosheds.org/downloads where we obtained the catchments and rivers
-  # shapefile and filtered the corresponding Ebre basin. 
-  shape_Rivers <- st_read("GIS_data/Rivers_BASINS.shp")
-  shape_Rivers2 <- as(shape_Rivers, "Spatial")
-  #plot(shape_Rivers2)
-  
-  # With the points2network we find which points of the shapefile are closer to our points (ptsxy).
-  # Thus, we generate a vector of IDs of which nodes of the shape correspond to each point in the ptsxy
-  # approach=1 searches the closer "node" to the desired point. 
-  # approach=2 relocates the points as new network nodes (adds new nodes)-> Not recomended as then it is difficult to 
-  #work with the values related with the graph... there are no equivalences...
-  res.nv <- points2network(ntdata = shape_Rivers2, pointsxy= ptsxy, ELComputed = TRUE,approach = 1)
-  # Checking the correspondence between points and their corresponding nodes
-  #ptsinnt.view(ntdata = shape_Rivers2, nodelist = res.nv[[1]], pointsxy = ptsxy, CoorespondIDs= res.nv[[3]])
 
-  # Generate the vector with the nodes "IDs" that correspond to our sampling points
-  # Check this vector
-  all_lakes_BASINS_fluvial[[y]] <- unlist(res.nv[[3]])
-  
-  # Now that we have the list of nodes that correspond to our sampling points. Let's built de graph and play a bit: 
-  # Shape to igraph -> every segment is converted to a central "node" and their corresponding "edges"
-  rtNEL1 <-readshpnw(shape_Rivers2,ELComputed = T)
-  
-  # Now we generate the strict graph
-  GRAPH_xarxes_fluvial[[y]] <- nel2igraph(nodelist = rtNEL1[[2]],edgelist = rtNEL1[[3]],Directed = T,weight = rtNEL1[[4]])
-  
-  # ConComp = components(GRAPH_xarxes_fluvial[[y]])
-  # cols <-ConComp$membership 
-  # cols[unlist(res.nv[[3]])[correspondence_BASINS]] <- "red"
-  # cols <- ifelse(cols==1, "green",ifelse(cols==2,"blue","red"))
-  # sizes <- ifelse(cols=="red",10,1)
-  #  plot(GRAPH_xarxes_fluvial[[y]], vertex.label = NA, vertex.size = sizes, vertex.size2 = sizes, vertex.color=cols,
-  #      edge.width=0.01, edge.color="grey50")
+correspondence_BASINS <- c()
+for (a in 1:55) {
+  correspondence_BASINS[a] <- which(round(cordenades_xarxes[[1]][(nrow(cordenades_xarxes[[1]])-55+a),1],4)==round(cordenades_xarxes_BASINS[[1]][,1],4))  
 }
-#dev.print(png, file = "C:/Users/Cunilleramontcusi/myplot.png", width = 20000, height = 17000, res=500)
+correspondence_BASINS_fluvial[[1]] <- correspondence_BASINS
+# We rewrite "ptsxy" with the converted coordinates to lat/long
+ptsxy <- coordinates(cordenades_xarxes_BASINS[[1]])
+
+#   Load the river shapefile. This shapefil is the entire basin of the Ebre river. 
+# Extracted from https://www.hydrosheds.org/downloads where we obtained the catchments and rivers
+# shapefile and filtered the corresponding Ebre basin. 
+shape_Rivers <- st_read("GIS_data/Rivers_BASINS.shp")
+shape_Rivers2 <- as(shape_Rivers, "Spatial")
+#plot(shape_Rivers2)
+
+# With the points2network we find which points of the shapefile are closer to our points (ptsxy).
+# Thus, we generate a vector of IDs of which nodes of the shape correspond to each point in the ptsxy
+# approach=1 searches the closer "node" to the desired point. 
+# approach=2 relocates the points as new network nodes (adds new nodes)-> Not recomended as then it is difficult to 
+#work with the values related with the graph... there are no equivalences...
+res.nv <- points2network(ntdata = shape_Rivers2, pointsxy= ptsxy, ELComputed = TRUE,approach = 1)
+# Checking the correspondence between points and their corresponding nodes
+#ptsinnt.view(ntdata = shape_Rivers2, nodelist = res.nv[[1]], pointsxy = ptsxy, CoorespondIDs= res.nv[[3]])
+
+# Generate the vector with the nodes "IDs" that correspond to our sampling points
+# Check this vector
+all_lakes_BASINS_fluvial[[1]] <- unlist(res.nv[[3]])
+
+# Now that we have the list of nodes that correspond to our sampling points. Let's built de graph and play a bit: 
+# Shape to igraph -> every segment is converted to a central "node" and their corresponding "edges"
+rtNEL1 <-readshpnw(shape_Rivers2,ELComputed = T)
+
+# Now we generate the strict graph
+GRAPH_xarxes_fluvial[[1]] <- nel2igraph(nodelist = rtNEL1[[2]],edgelist = rtNEL1[[3]],Directed = T,weight = rtNEL1[[4]])
+
+ConComp = components(GRAPH_xarxes_fluvial[[1]])
+cols <-ConComp$membership 
+cols[unlist(res.nv[[3]])[correspondence_BASINS]] <- "red"
+cols <- ifelse(cols==1, "green",ifelse(cols==2,"blue","red"))
+sizes <- ifelse(cols=="red",10,1)
+
+png(filename = "C:/Users/Cunilleramontcusi/Alpine_fluvial.png", width = 20000, height = 20000, res=1000)
+par(mar=c(0,0,0,0))
+plot(GRAPH_xarxes_fluvial[[1]], vertex.label = NA, vertex.size = sizes, vertex.size2 = sizes, vertex.color=cols,
+     edge.width=0.01, edge.color="grey50")
+dev.off()
+detach("package:shp2graph", unload = TRUE)
 
 
 ##########################################
@@ -705,7 +736,6 @@ for (y in 1:length(cordenades_xarxes_BASINS)) {
 ##########################################
 
 # Calculation of network data for the 55 lakes (closeness, degree, between, evcent, subgraph centrality)
-library(igraph)
 network_data <- list()
 for (i in 1:length(MAPS_xarxes)) {
   Xarx_grpah <- graph.adjacency(MAPS_xarxes[[i]], mode = "undirected",diag = F)
@@ -723,18 +753,17 @@ for (i in 1:length(MAPS_xarxes)) {
   colnames(network_data[[i]]) <- c("clo_ALPS","Sub_centr_ALPS","deg_ALPS","Eigvec_cent_ALPS","bet_ALPS")
 }
 
-fluvial_network_data <- list()
-for (i in 1:length(GRAPH_xarxes_fluvial)) {
-  output <- matrix(nrow = length(V(GRAPH_xarxes_fluvial[[i]])), ncol = 3)
-  
-  fluvial_network_data[[i]] <- output
-  
-  fluvial_network_data[[i]][,1] <- closeness(GRAPH_xarxes_fluvial[[i]], mode = "out")
-  fluvial_network_data[[i]][,2] <- degree(GRAPH_xarxes_fluvial[[i]],mode = "out")
-  fluvial_network_data[[i]][,3] <- betweenness(GRAPH_xarxes_fluvial[[i]])
 
-  colnames(fluvial_network_data[[i]]) <- c("clo_ALPS","deg_ALPS","bet_ALPS")
-}
+fluvial_network_data <- list()
+output <- matrix(nrow = length(V(GRAPH_xarxes_fluvial[[1]])), ncol = 3)
+
+fluvial_network_data[[1]] <- output
+
+fluvial_network_data[[1]][,1] <- closeness(GRAPH_xarxes_fluvial[[1]], mode = "out")
+fluvial_network_data[[1]][,2] <- degree(GRAPH_xarxes_fluvial[[1]],mode = "out")
+fluvial_network_data[[1]][,3] <- betweenness(GRAPH_xarxes_fluvial[[1]])
+
+colnames(fluvial_network_data[[1]]) <- c("clo_ALPS","deg_ALPS","bet_ALPS")
 
 # Saving the list with the FIVE matrices with the network values 
 save(network_data, file = "S16-values/network_dataset.RData")
@@ -749,65 +778,48 @@ for (r in 1:length(MAPS_xarxes)) {
   PCA_network_results[[r]] <-PCA_result$x[,1]
 }
 names(PCA_network_results) <- c("max_PCA_network","mid_PCA_network","mid_mid_PCA_network",
-                                     "small_PCA_network","min_PCA_network")
+                                "small_PCA_network","min_PCA_network")
 
 PCA_network_results[[1]] <- PCA_network_results[[1]]*-1
 
 grid.arrange(autoplot(PCA_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
                       loadings.colour = 'red', loadings.label.colour="black")+
-                      geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
-                      theme_bw(), 
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
+               theme_bw(), 
              autoplot(PCA_network_plot[[2]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
                       loadings.colour = 'red', loadings.label.colour="black")+
-                      geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~300km")+
-                      theme_bw(),
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~300km")+
+               theme_bw(),
              autoplot(PCA_network_plot[[3]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
                       loadings.colour = 'red', loadings.label.colour="black")+
-                      geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~100km")+
-                      theme_bw(),
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~100km")+
+               theme_bw(),
              autoplot(PCA_network_plot[[4]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
                       loadings.colour = 'red', loadings.label.colour="black")+
-                      geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~60km")+
-                      theme_bw(),
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~60km")+
+               theme_bw(),
              autoplot(PCA_network_plot[[5]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
                       loadings.colour = 'red', loadings.label.colour="black")+
-                      geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~6km")+
-                      theme_bw(),  
+               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~6km")+
+               theme_bw(),  
              ncol = 2, nrow=3)
 
 
 library(ggfortify)
 PCA_fluvial_network_results <- list()
 PCA_fluvial_network_plot<- list()
-for (r in 1:length(MAPS_xarxes)) {
-  PCA_fluvial_result <- prcomp(fluvial_network_data[[r]], center = T, scale. = T)
-  PCA_fluvial_network_plot[[r]] <- PCA_fluvial_result
-  PCA_fluvial_network_results[[r]] <-PCA_fluvial_result$x[,1]
-}
-names(PCA_fluvial_network_results) <- c("max_PCA_fluvial_network","mid_PCA_fluvial_network","mid_mid_PCA_fluvial_network",
-                                        "small_fluvial_PCA_network","min_PCA_fluvial_network")
 
-grid.arrange(autoplot(PCA_fluvial_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
-               theme_bw(), 
-             autoplot(PCA_fluvial_network_plot[[2]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~300km")+
-               theme_bw(),
-             autoplot(PCA_fluvial_network_plot[[3]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~100km")+
-               theme_bw(),
-             autoplot(PCA_fluvial_network_plot[[4]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~60km")+
-               theme_bw(),
-             autoplot(PCA_fluvial_network_plot[[5]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~6km")+
-               theme_bw(),  
-             ncol = 2, nrow=3)
+PCA_fluvial_result <- prcomp(fluvial_network_data[[1]], center = T, scale. = T)
+PCA_fluvial_network_plot[[1]] <- PCA_fluvial_result
+PCA_fluvial_network_results[[1]] <-PCA_fluvial_result$x[,1]
+
+names(PCA_fluvial_network_results) <- c("PCA_fluvial_network")
+
+autoplot(PCA_fluvial_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+         loadings.colour = 'red', loadings.label.colour="black")+
+  geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
+  theme_bw()
+
 
 ##########################################
 ##########################################
@@ -825,7 +837,7 @@ community_indices<- list()
 ### FITTINGS OF OBSERVED VS FITTEDS WITH CCA AND DBRDA
 # CCA
 tst_coeficient_out <- list()
-for (r in 1:4) {
+for (r in 1:5) {
   cca1<-cca(comm_data[[r]]~as.matrix(env_data[[r]][,4:6]))
   fitteds <- fitted(cca1, model="CCA", type= "response")
   coeffici <- c()
@@ -835,18 +847,18 @@ for (r in 1:4) {
   tst_coeficient_out[[r]] <- coeffici
 }
 community_indices[[1]] <- tst_coeficient_out
-names(community_indices[[1]]) <- c("CCA fit/ob_S16","CCA fit/ob_S18","CCA fit/ob_PHY","CCA fit/ob_ZOO") 
+names(community_indices[[1]]) <- c("EnvTrack_CCA_S16","EnvTrack_CCA_S18","EnvTrack_CCA_PHY","EnvTrack_CCA_ZOO", "EnvTrack_CCA_18S.ZOO") 
 
 # ALPHA DIVERSITY
 # Richness
 tst_coeficient_out <- list()
-for (r in 1:4) {
+for (r in 1:5) {
   ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
   rich <- apply(comm_data[[r]],1,sum)
   tst_coeficient_out[[r]] <- rich
 }
 community_indices[[2]] <- tst_coeficient_out
-names(community_indices[[2]])<- c("Rich_S16","Rich_S18","Rich_PHY","Rich_ZOO") 
+names(community_indices[[2]])<- c("Rich_S16","Rich_S18","Rich_PHY","Rich_ZOO","Rich_ZOO.18S") 
 
 # BETA DIVERSITY
 # LCBD
@@ -856,17 +868,17 @@ library(vegan)
 library(adespatial)
 library(ade4)
 tst_coeficient_out <- list()
-for (r in 1:4) {
+for (r in 1:5) {
   ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
   LCBD_values <- beta.div(comm_data[[r]], method = "jaccard", nperm = 9999)
   tst_coeficient_out[[r]] <- LCBD_values$LCBD
 }
 community_indices[[3]] <- tst_coeficient_out
-names(community_indices[[3]])<- c("LCBD_S16","LCBD_S18","LCBD_PHY","LCBD_ZOO") 
+names(community_indices[[3]])<- c("LCBD_S16","LCBD_S18","LCBD_PHY","LCBD_ZOO","LCBD_18S.ZOO") 
 
 # Betadiversity components
 tst_coeficient_out <- list()
-for (r in 1:4) {
+for (r in 1:5) {
   ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
   taxa.q_Ruziska_AB <- beta.div.comp(comm_data[[r]], coef = "J", quant = TRUE)
   replacemnet <- apply(as.matrix(taxa.q_Ruziska_AB$repl),1,mean)
@@ -876,14 +888,14 @@ for (r in 1:4) {
 }
 
 community_indices[[4]]<- list(tst_coeficient_out[[1]][,1],tst_coeficient_out[[2]][,1],
-                              tst_coeficient_out[[3]][,1], tst_coeficient_out[[4]][,1])
-names(community_indices[[4]])<- c("Repl_S16","Repl_S18","Repl_PHY","Repl_ZOO") 
+                              tst_coeficient_out[[3]][,1], tst_coeficient_out[[4]][,1],tst_coeficient_out[[5]][,1])
+names(community_indices[[4]])<- c("Repl_S16","Repl_S18","Repl_PHY","Repl_ZOO","Repl_18S.ZOO") 
 community_indices[[5]]<- list(tst_coeficient_out[[1]][,2],tst_coeficient_out[[2]][,2],
-                              tst_coeficient_out[[3]][,2], tst_coeficient_out[[4]][,2])
-names(community_indices[[5]])<- c("RicDif_S16","RicDif_S18","RicDif_PHY","RicDif_ZOO") 
+                              tst_coeficient_out[[3]][,2], tst_coeficient_out[[4]][,2],tst_coeficient_out[[5]][,2])
+names(community_indices[[5]])<- c("RicDif_S16","RicDif_S18","RicDif_PHY","RicDif_ZOO","RicDif_18S.ZOO") 
 
 biod <- list()
-for (r in 1:4) {
+for (r in 1:5) {
   biod[[r]] <- cbind(community_indices[[1]][[r]],community_indices[[2]][[r]],community_indices[[3]][[r]],
                      community_indices[[4]][[r]],community_indices[[5]][[r]])
   noms <-c(names(community_indices[[1]])[r],names(community_indices[[2]])[r],names(community_indices[[3]])[r],
@@ -905,12 +917,13 @@ biod
 # S18 = 48 lakes
 # Phy = 50 lakes
 # Zoo = 52 lakes
+# 18S.Zoo = 48 lakes
 
-biod_names <- c("S16","S18","phy","zoo")
+biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
 
 coincidence <- c()
 coincidence_values <- list()
-for (r in 1:4) {
+for (r in 1:5) {
   for (coinc in 1:nrow(all_lakes_coord)) {
     coincidence_value <- 0
     coincidence_value<-which(rownames(all_lakes_coord)==rownames(env_data[[r]])[coinc])
@@ -920,60 +933,38 @@ for (r in 1:4) {
   coincidence_values[[r]] <- coincidence
 }
 
-
-for (groups in 1:4) {
-  color_groups <- CUNILLERA_cols("yellow","blue","green","red")
+model_resutls_total <- list()
+linear_model_resutls <- list()
+for (groups in 1:5) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
   for (net in 1:5) {
     coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
     dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
                      biod[[groups]][,1:5])
     colnames(dataset)[1] <-c("Network")
     plots_grups <- list()
-  for(var in 1:5){
-      #p.val <- cor.test(dataset[,1],dataset[,var+1])[3]
-      p.val <- summary(lm(dataset[,1]~dataset[,var+1]))[[4]][2,4]
-      if(p.val>0.05){
-        plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
-                                                 y=as.data.frame(dataset)[,var+1]))+
-          geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
-          geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+
-          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
-          theme_classic()
-      }else{
-        plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
-                                                 y=as.data.frame(dataset)[,var+1]))+
-          geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
-          geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+
-          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
-          theme_classic()
-        }
-      }
+    output_results <- list()
     
-  png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",biod_names[[groups]],"_",names(PCA_network_results)[[net]],".png"),
-      width =582*2 ,height =629*2 ,units ="px",res = 200)
-  grid.arrange(plots_grups[[1]],plots_grups[[2]],
-               plots_grups[[3]],plots_grups[[4]],
-               plots_grups[[5]],
-               ncol=3,nrow=3, top=names(PCA_network_results)[[net]])
-  dev.off()
- }
-}             
-
-
-
-
-for (groups in 1:4) {
-  color_groups <- CUNILLERA_cols("yellow","blue","green","red")
-  for (net in 1:5) {
-    coin <- PCA_fluvial_network_results[[net]][all_lakes_BASINS_fluvial[[net]][correspondence_BASINS_fluvial[[net]]]]
-    dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
-                     biod[[groups]][,1:5])
-    colnames(dataset)[1] <-c("Network")
-    plots_grups <- list()
-    for(var in 1:5){
-      #p.val <- cor.test(dataset[,1],dataset[,var+1])[3]
-      p.val <- summary(lm(dataset[,1]~dataset[,var+1]))[[4]][2,4]
-      if(p.val>0.05){
+    require(betareg)
+    p.val <- c()
+    #CCA
+     p.val[1] <-summary(betareg(abs(dataset[,2])~dataset[,1]))[[1]]$mean[2,4]
+     output_results[[1]] <- summary(betareg(abs(dataset[,2])~dataset[,1]))
+    #Richness
+     p.val[2] <- summary(lm(log(dataset[,3]+1)~dataset[,1]))[[4]][2,4]
+     output_results[[2]] <- summary(lm(log(dataset[,3]+1)~dataset[,1]))  
+    #LCBD
+     p.val[3] <-summary(betareg(dataset[,4]~dataset[,1]))[[1]]$mean[2,4]
+     output_results[[3]] <- summary(betareg(dataset[,4]~dataset[,1]))
+    #Turn
+     p.val[4] <-summary(betareg(dataset[,5]~dataset[,1]))[[1]]$mean[2,4]
+     output_results[[4]] <- summary(betareg(dataset[,5]~dataset[,1]))
+    #RichDiff
+     p.val[5] <-summary(betareg(dataset[,6]~dataset[,1]))[[1]]$mean[2,4]
+     output_results[[5]] <- summary(betareg(dataset[,6]~dataset[,1]))
+      
+   for(var in 1:5){
+      if(p.val[var]>0.05){
         plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
                                                         y=as.data.frame(dataset)[,var+1]))+
           geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
@@ -990,15 +981,74 @@ for (groups in 1:4) {
       }
     }
     
-    png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",biod_names[[groups]],"_",names(PCA_fluvial_network_results)[[net]],".png"),
+    linear_model_resutls[[net]] <-output_results
+
+    png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",biod_names[[groups]],"_",names(PCA_network_results)[[net]],".png"),
         width =582*2 ,height =629*2 ,units ="px",res = 200)
     grid.arrange(plots_grups[[1]],plots_grups[[2]],
                  plots_grups[[3]],plots_grups[[4]],
                  plots_grups[[5]],
-                 ncol=3,nrow=3, top=names(PCA_network_results)[[net]])
+                 ncol=2,nrow=3, top=names(PCA_network_results)[[net]])
     dev.off()
   }
+  model_resutls_total[[groups]] <- linear_model_resutls
 }             
+
+model_resutls_fluvial <- list()
+for (groups in 1:5) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
+  dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                   biod[[groups]][,1:5])
+  colnames(dataset)[1] <-c("Network")
+  plots_grups <- list()
+  output_results <- list()
+  require(betareg)
+  p.val <- c()
+  #CCA
+  p.val[1] <-summary(betareg(abs(dataset[,2])~dataset[,1]))[[1]]$mean[2,4]
+  output_results[[1]] <- summary(betareg(abs(dataset[,2])~dataset[,1]))
+  #Richness
+  p.val[2] <- summary(lm(log(dataset[,3]+1)~dataset[,1]))[[4]][2,4]
+  output_results[[2]] <- summary(lm(log(dataset[,3]+1)~dataset[,1]))  
+  #LCBD
+  p.val[3] <-summary(betareg(dataset[,4]~dataset[,1]))[[1]]$mean[2,4]
+  output_results[[3]] <- summary(betareg(dataset[,4]~dataset[,1]))
+  #Turn
+  p.val[4] <-summary(betareg(dataset[,5]~dataset[,1]))[[1]]$mean[2,4]
+  output_results[[4]] <- summary(betareg(dataset[,5]~dataset[,1]))
+  #RichDiff
+  p.val[5] <-summary(betareg(dataset[,6]~dataset[,1]))[[1]]$mean[2,4]
+  output_results[[5]] <- summary(betareg(dataset[,6]~dataset[,1]))
+  
+  for(var in 1:5){
+    if(p.val[var]>0.05){
+      plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
+                                                      y=as.data.frame(dataset)[,var+1]))+
+        geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_smooth(method = "lm", se=F, colour="black",linetype=2, size=2)+
+        labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+        theme_classic()
+    }else{
+      plots_grups[[var]] <-ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
+                                                      y=as.data.frame(dataset)[,var+1]))+
+        geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+
+        labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+        theme_classic()
+    }
+  }
+  
+  model_resutls_fluvial[[groups]] <-output_results
+  
+  png(filename =paste("C:/Users/Cunilleramontcusi/","Divers",biod_names[[groups]],"_Fluvial",".png"),
+      width =582*2 ,height =629*2 ,units ="px",res = 200)
+  grid.arrange(plots_grups[[1]],plots_grups[[2]],
+               plots_grups[[3]],plots_grups[[4]],
+               plots_grups[[5]],
+               ncol=2,nrow=3, top="Fluvial network")
+  dev.off()
+}
 
 
 
@@ -1109,7 +1159,7 @@ for (groups in 1:4) {
 }             
 
 
-  
+
 
 
 

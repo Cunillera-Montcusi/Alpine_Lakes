@@ -15,6 +15,7 @@ library(Rmisc)
 library(gamm4)
 library(MuMIn)
 
+
 # Ploting and image 
 library(ggplot2)
 library(gtable)    
@@ -933,6 +934,8 @@ for (r in 1:5) {
   coincidence_values[[r]] <- coincidence
 }
 
+# Linear models __________________________________________________________________ ####
+
 model_resutls_total <- list()
 linear_model_resutls <- list()
 for (groups in 1:5) {
@@ -992,8 +995,9 @@ for (groups in 1:5) {
     dev.off()
   }
   model_resutls_total[[groups]] <- linear_model_resutls
-}             
+}   
 
+#_____________________________________________________________________________________________________________________________________________#
 model_resutls_fluvial <- list()
 for (groups in 1:5) {
   color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
@@ -1051,6 +1055,538 @@ for (groups in 1:5) {
 }
 
 
+sign_netw <- list()
+sign_groups <- list()
+for (group in 1:5) {
+  for (netw in 1:5) {
+      sign <- c()
+      sign[1] <-model_resutls_total[[group]][[netw]][[1]][[1]]$mean[2,4]
+      sign[2] <-model_resutls_total[[group]][[netw]][[2]][[4]][2,4]
+      sign[3] <-model_resutls_total[[group]][[netw]][[3]][[1]]$mean[2,4]
+      sign[4] <-model_resutls_total[[group]][[netw]][[4]][[1]]$mean[2,4]
+      sign[5] <-model_resutls_total[[group]][[netw]][[5]][[1]]$mean[2,4]  
+    sign_netw[[netw]] <- sign
+  }
+  sign_groups[[group]] <- sign_netw
+}
+
+flu_sign_groups <- list()
+for (group in 1:5) {
+    sign <- c()
+    sign[1] <-model_resutls_fluvial[[group]][[1]][[1]]$mean[2,4]
+    sign[2] <-model_resutls_fluvial[[group]][[2]][[4]][2,4]
+    sign[3] <-model_resutls_fluvial[[group]][[3]][[1]]$mean[2,4]
+    sign[4] <-model_resutls_fluvial[[group]][[4]][[1]]$mean[2,4]
+    sign[5] <-model_resutls_fluvial[[group]][[5]][[1]]$mean[2,4]  
+    flu_sign_groups[[group]] <- sign
+}
+
+Names_Variab <- c("Environmental tracking", "Species richness", "LCBD", "Replacement", "Richness difference")
+plots_significance <- list()
+for (variable in 1:5) {
+  
+  max_netw <- cbind(c(sign_groups[[1]][[1]][[variable]], sign_groups[[2]][[1]][[variable]], sign_groups[[3]][[1]][[variable]], 
+                      sign_groups[[4]][[1]][[variable]], sign_groups[[5]][[1]][[variable]]),
+                    rep("600 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  mid_netw <- cbind(c(sign_groups[[1]][[2]][[variable]], sign_groups[[2]][[2]][[variable]], sign_groups[[3]][[2]][[variable]], 
+                      sign_groups[[4]][[2]][[variable]], sign_groups[[5]][[2]][[variable]]),
+                    rep("300 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  mid_mid_netw <- cbind(c(sign_groups[[1]][[3]][[variable]], sign_groups[[2]][[3]][[variable]], sign_groups[[3]][[3]][[variable]], 
+                          sign_groups[[4]][[3]][[variable]], sign_groups[[5]][[3]][[variable]]),
+                        rep("100 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  small_netw <- cbind(c(sign_groups[[1]][[4]][[variable]], sign_groups[[2]][[4]][[variable]], sign_groups[[3]][[4]][[variable]], 
+                        sign_groups[[4]][[4]][[variable]], sign_groups[[5]][[4]][[variable]]),
+                      rep("60 km", 5), 
+                      c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  min_netw <- cbind(c(sign_groups[[1]][[5]][[variable]], sign_groups[[2]][[5]][[variable]], sign_groups[[3]][[5]][[variable]], 
+                      sign_groups[[4]][[5]][[variable]], sign_groups[[5]][[5]][[variable]]),
+                    rep("6 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  fluv_netw <- cbind(c(flu_sign_groups[[1]][[variable]], flu_sign_groups[[2]][[variable]], flu_sign_groups[[3]][[variable]], 
+                       flu_sign_groups[[4]][[variable]], flu_sign_groups[[5]][[variable]]),
+                     rep("Fluvial", 5), 
+                     c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  
+  dataset_pval <- as.data.frame(rbind(max_netw,mid_netw,mid_mid_netw,small_netw,min_netw,fluv_netw))
+  colnames(dataset_pval) <- c("val","Network","Group")
+  dataset_pval$val <-as.numeric(dataset_pval$val)
+  dataset_pval$Network <- factor(dataset_pval$Network,
+                                 levels = c("600 km", "300 km","100 km","60 km","6 km", "Fluvial"))
+  dataset_pval$Group <- factor(dataset_pval$Group,
+                               levels = c("S16","S18","Phy","Zoo", "S18zoo"))
+  significants <- rep("NoSign",5*6)
+  significants[which(dataset_pval$val<0.05)]<- "Sign"
+  dataset_pval$Sign <- factor(significants) 
+  
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  
+plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(val)))+
+  geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
+    geom_jitter(aes(fill=Group, alpha=Sign, size=Sign), shape=21,width = 0.5)+
+    scale_size_manual(values = c(2,6))+
+    scale_alpha_manual(values = c(0.2,0.9))+
+    scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
+                               color_groups[4],color_groups[5],color_groups[6]))+
+    scale_y_continuous(expand = c(0.2,0.01),
+                       breaks =c(0.2,0.4,0.6,0.8,1) )+
+    
+    geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
+    labs(title=Names_Variab[variable])+ylab("P-values")+xlab("Network")+
+    theme_classic()
+}
+
+png(filename =paste("C:/Users/Cunilleramontcusi/Significance_Groups.png"),
+    width =900*5 ,height =700*5 ,units ="px",res = 400)
+grid.arrange(plots_significance[[1]],plots_significance[[2]],
+             plots_significance[[3]],plots_significance[[4]],
+             plots_significance[[5]],
+             ncol=2,nrow=3, top="Significance values")
+dev.off()
+
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+# Non-Linear models______________________________________ ####
+
+GAMmodel_resutls_total <- list()
+GAM_model_resutls <- list()
+for (groups in 1:5) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  for (net in 1:5) {
+    coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
+    dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                     biod[[groups]][,1:5])
+    colnames(dataset)[1] <-c("Network")
+    plots_grups <- list()
+    output_results <- list()
+    
+    p.val <- c()
+    #CCA
+    p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+    output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
+    preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    #Richness
+    p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+    output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))  
+    preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    #LCBD
+    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+    output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
+    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    #Turn
+    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+    output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
+    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    #RichDiff
+    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+    output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
+    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
+    
+    for(var in 1:5){
+      if(p.val[var]>0.05){
+        my_data <- data.frame(cbind(dataset[,var+1],dataset[,1]),
+                              mu   = GAM.pred[[var]]$fit,
+                              low  = GAM.pred[[var]]$fit - 1.96 * GAM.pred[[var]]$se.fit,
+                              high = GAM.pred[[var]]$fit + 1.96 * GAM.pred[[var]]$se.fit)
+        plots_grups[[var]] <-
+          ggplot(my_data, aes(x = X2, y = X1)) +
+          geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+          geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
+          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+          theme_classic()
+      }else{
+        my_data <- data.frame(cbind(dataset[,var+1],dataset[,1]),
+                              mu   = GAM.pred[[var]]$fit,
+                              low  = GAM.pred[[var]]$fit - 1.96 * GAM.pred[[var]]$se.fit,
+                              high = GAM.pred[[var]]$fit + 1.96 * GAM.pred[[var]]$se.fit)
+        plots_grups[[var]] <-ggplot(my_data, aes(x = X2, y = X1)) +
+          geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+          geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
+          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+          theme_classic()
+      }
+    }
+    
+    GAM_model_resutls[[net]] <-output_results
+    
+    png(filename =paste("C:/Users/Cunilleramontcusi/","GAM_Divers",biod_names[[groups]],"_",names(PCA_network_results)[[net]],".png"),
+        width =582*2 ,height =629*2 ,units ="px",res = 200)
+    grid.arrange(plots_grups[[1]],plots_grups[[2]],
+                 plots_grups[[3]],plots_grups[[4]],
+                 plots_grups[[5]],
+                 ncol=2,nrow=3, top=names(PCA_network_results)[[net]])
+    dev.off()
+  }
+  GAMmodel_resutls_total[[groups]] <- GAM_model_resutls
+}             
+
+#_____________________________________________________________________________________________________________________________________________#
+GAMmodel_resutls_fluvial <- list()
+for (groups in 1:5) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
+  dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                   biod[[groups]][,1:5])
+  colnames(dataset)[1] <-c("Network")
+  plots_grups <- list()
+  output_results <- list()
+  
+  p.val <- c()
+  #CCA
+  p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+  output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
+  preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  #Richness
+  p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+  output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))  
+  preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  #LCBD
+  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+  output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
+  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  #Turn
+  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+  output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
+  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  #RichDiff
+  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+  output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
+  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
+  
+  for(var in 1:5){
+    if(p.val[var]>0.05){
+      my_data <- data.frame(cbind(dataset[,var+1],dataset[,1]),
+                            mu   = GAM.pred[[var]]$fit,
+                            low  = GAM.pred[[var]]$fit - 1.96 * GAM.pred[[var]]$se.fit,
+                            high = GAM.pred[[var]]$fit + 1.96 * GAM.pred[[var]]$se.fit)
+      plots_grups[[var]] <-
+        ggplot(my_data, aes(x = X2, y = X1)) +
+        geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
+        labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+        theme_classic()
+    }else{
+      my_data <- data.frame(cbind(dataset[,var+1],dataset[,1]),
+                            mu   = GAM.pred[[var]]$fit,
+                            low  = GAM.pred[[var]]$fit - 1.96 * GAM.pred[[var]]$se.fit,
+                            high = GAM.pred[[var]]$fit + 1.96 * GAM.pred[[var]]$se.fit)
+      plots_grups[[var]] <-ggplot(my_data, aes(x = X2, y = X1)) +
+        geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
+        labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+        theme_classic()
+    }
+  }
+  
+  GAMmodel_resutls_fluvial[[groups]] <-output_results
+  
+  png(filename =paste("C:/Users/Cunilleramontcusi/","GAM_Divers",biod_names[[groups]],"_Fluvial",".png"),
+      width =582*2 ,height =629*2 ,units ="px",res = 200)
+  grid.arrange(plots_grups[[1]],plots_grups[[2]],
+               plots_grups[[3]],plots_grups[[4]],
+               plots_grups[[5]],
+               ncol=2,nrow=3, top="Fluvial network")
+  dev.off()
+}
+
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+# PLot to summarize GAM models ____________________________________________________####
+sign_netw <- list()
+sign_groups <- list()
+for (group in 1:5) {
+  for (netw in 1:5) {
+    sign <- c()
+    sign[1] <-GAMmodel_resutls_total[[group]][[netw]][[1]][[8]]
+    sign[2] <-GAMmodel_resutls_total[[group]][[netw]][[2]][[8]]
+    sign[3] <-GAMmodel_resutls_total[[group]][[netw]][[3]][[8]]
+    sign[4] <-GAMmodel_resutls_total[[group]][[netw]][[4]][[8]]
+    sign[5] <-GAMmodel_resutls_total[[group]][[netw]][[5]][[8]] 
+    sign_netw[[netw]] <- sign
+  }
+  sign_groups[[group]] <- sign_netw
+}
+
+flu_sign_groups <- list()
+for (group in 1:5) {
+  sign <- c()
+  sign[1] <-GAMmodel_resutls_fluvial[[group]][[1]][[8]]
+  sign[2] <-GAMmodel_resutls_fluvial[[group]][[2]][[8]]
+  sign[3] <-GAMmodel_resutls_fluvial[[group]][[3]][[8]]
+  sign[4] <-GAMmodel_resutls_fluvial[[group]][[4]][[8]]
+  sign[5] <-GAMmodel_resutls_fluvial[[group]][[5]][[8]] 
+  flu_sign_groups[[group]] <- sign
+}
+
+
+Names_Variab <- c("Environmental tracking", "Species richness", "LCBD", "Replacement", "Richness difference")
+plots_significance <- list()
+for (variable in 1:5) {
+  
+  max_netw <- cbind(c(sign_groups[[1]][[1]][[variable]], sign_groups[[2]][[1]][[variable]], sign_groups[[3]][[1]][[variable]], 
+                      sign_groups[[4]][[1]][[variable]], sign_groups[[5]][[1]][[variable]]),
+                    rep("600 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  mid_netw <- cbind(c(sign_groups[[1]][[2]][[variable]], sign_groups[[2]][[2]][[variable]], sign_groups[[3]][[2]][[variable]], 
+                      sign_groups[[4]][[2]][[variable]], sign_groups[[5]][[2]][[variable]]),
+                    rep("300 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  mid_mid_netw <- cbind(c(sign_groups[[1]][[3]][[variable]], sign_groups[[2]][[3]][[variable]], sign_groups[[3]][[3]][[variable]], 
+                          sign_groups[[4]][[3]][[variable]], sign_groups[[5]][[3]][[variable]]),
+                        rep("100 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  small_netw <- cbind(c(sign_groups[[1]][[4]][[variable]], sign_groups[[2]][[4]][[variable]], sign_groups[[3]][[4]][[variable]], 
+                        sign_groups[[4]][[4]][[variable]], sign_groups[[5]][[4]][[variable]]),
+                      rep("60 km", 5), 
+                      c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  min_netw <- cbind(c(sign_groups[[1]][[5]][[variable]], sign_groups[[2]][[5]][[variable]], sign_groups[[3]][[5]][[variable]], 
+                      sign_groups[[4]][[5]][[variable]], sign_groups[[5]][[5]][[variable]]),
+                    rep("6 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  fluv_netw <- cbind(c(flu_sign_groups[[1]][[variable]], flu_sign_groups[[2]][[variable]], flu_sign_groups[[3]][[variable]], 
+                       flu_sign_groups[[4]][[variable]], flu_sign_groups[[5]][[variable]]),
+                     rep("Fluvial", 5), 
+                     c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  
+  dataset_pval <- as.data.frame(rbind(max_netw,mid_netw,mid_mid_netw,small_netw,min_netw,fluv_netw))
+  colnames(dataset_pval) <- c("val","Network","Group")
+  dataset_pval$val <-as.numeric(dataset_pval$val)
+  dataset_pval$Network <- factor(dataset_pval$Network,
+                                 levels = c("600 km", "300 km","100 km","60 km","6 km", "Fluvial"))
+  dataset_pval$Group <- factor(dataset_pval$Group,
+                               levels = c("S16","S18","Phy","Zoo", "S18zoo"))
+  significants <- rep("NoSign",5*6)
+  significants[which(dataset_pval$val<0.05)]<- "Sign"
+  dataset_pval$Sign <- factor(significants) 
+  
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  
+  plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(val)))+
+    geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
+    geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
+    scale_alpha_manual(values = c(0.2,0.9))+
+    scale_size_manual(values = c(2,6))+
+    scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
+                               color_groups[4],color_groups[5],color_groups[6]))+
+    scale_y_continuous(expand = c(0.2,0.01),
+                       breaks =c(0.2,0.4,0.6,0.8,1) )+
+    geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
+    labs(title=Names_Variab[variable])+ylab("P-values")+xlab("Network")+
+    theme_classic()
+}
+
+png(filename =paste("C:/Users/Cunilleramontcusi/GAM_Significance_Groups.png"),
+    width =900*5 ,height =700*5 ,units ="px",res = 400)
+grid.arrange(plots_significance[[1]],plots_significance[[2]],
+             plots_significance[[3]],plots_significance[[4]],
+             plots_significance[[5]],
+             ncol=2,nrow=3, top="Significance values")
+dev.off()
+
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+# Linear model - only significant plots (Article plots)________________________####
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+
+Sign_plots_total <- list()
+ref_value <- 0
+Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km")
+for (groups in 1:5) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  for (net in 1:5) {
+    coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
+    dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                     biod[[groups]][,1:5])
+    colnames(dataset)[1] <-c("Network")
+    plots_grups <- list()
+    output_results <- list()
+    
+    require(betareg)
+    p.val <- c()
+    #CCA
+    p.val[1] <-summary(betareg(abs(dataset[,2])~dataset[,1]))[[1]]$mean[2,4]
+    #Richness
+    p.val[2] <- summary(lm(log(dataset[,3]+1)~dataset[,1]))[[4]][2,4]
+    #LCBD
+    p.val[3] <-summary(betareg(dataset[,4]~dataset[,1]))[[1]]$mean[2,4]
+    #Turn
+    p.val[4] <-summary(betareg(dataset[,5]~dataset[,1]))[[1]]$mean[2,4]
+    #RichDiff
+    p.val[5] <-summary(betareg(dataset[,6]~dataset[,1]))[[1]]$mean[2,4]
+    
+    select_p.val <- which(p.val<0.05)
+    
+    if(length(select_p.val)>0){
+      for(var in 1:length(select_p.val)){
+        ref_value <- ref_value+1
+  Sign_plots_total[[ref_value]] <- ggplot(dataset, aes_string(x=as.data.frame(dataset)[,1],
+                                                              y=as.data.frame(dataset)[,select_p.val[var]+1]))+
+                          geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+                          geom_smooth(method = "lm", se=F, colour="black",linetype=1, size=2)+
+                          labs(title=paste(Names_Networks[net],colnames(dataset)[select_p.val[var]+1]))+
+                          ylab(colnames(dataset)[select_p.val[var]+1])+
+                          theme_classic()
+      }
+    }
+  }
+}   
+
+ png(filename ="C:/Users/Cunilleramontcusi/Sign_Lineal_Diverse.png",
+        width =582*4 ,height =629*4 ,units ="px",res = 300)
+    grid.arrange(Sign_plots_total[[1]],Sign_plots_total[[2]],
+                 Sign_plots_total[[3]],Sign_plots_total[[4]],
+                 Sign_plots_total[[5]],Sign_plots_total[[6]],
+                 Sign_plots_total[[7]],Sign_plots_total[[8]],
+                 Sign_plots_total[[9]],Sign_plots_total[[10]],
+                 Sign_plots_total[[11]],Sign_plots_total[[12]],
+                 ncol=3,nrow=4, top="Sign_Ttla")
+    dev.off()
+    
+    
+    GAM_Sign_plots_total <- list()
+    ref_value <- 0
+    for (groups in 1:5) {
+      color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+      for (net in 1:5) {
+        coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
+        dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                         biod[[groups]][,1:5])
+        colnames(dataset)[1] <-c("Network")
+        plots_grups <- list()
+
+        p.val <- c()
+        #CCA
+        p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+        preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+        #Richness
+        p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+        preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+        #LCBD
+        p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+        preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+        #Turn
+        p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+        preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+        #RichDiff
+        p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+        preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+        
+        GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
+        
+        select_p.val <- which(p.val<0.05)
+        
+        if(length(select_p.val)>0){
+          for(var in 1:length(select_p.val)){
+            ref_value <- ref_value+1
+
+            my_data <- data.frame(cbind(dataset[,select_p.val[var]+1],dataset[,1]),
+                                  mu   = GAM.pred[[select_p.val[var]]]$fit,
+                                  low  = GAM.pred[[select_p.val[var]]]$fit - 1.96 * GAM.pred[[select_p.val[var]]]$se.fit,
+                                  high = GAM.pred[[select_p.val[var]]]$fit + 1.96 * GAM.pred[[select_p.val[var]]]$se.fit)
+    GAM_Sign_plots_total[[ref_value]] <-ggplot(my_data, aes(x = X2, y = X1)) +
+                                  geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+                                  geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
+                                  labs(title=paste(Names_Networks[[net]],colnames(dataset)[var+1]))+
+                                  ylab(colnames(dataset)[var+1])+
+                                  theme_classic()
+           }
+        }
+      }
+    }             
+    
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+#_____________________________________________________________________________________________________________________________________________#
+# GAM plot for the same
+    
+    
+    GAM_Sign_plots_total_Fluvial <- list()
+    ref_value <- 0
+    for (groups in 1:5) {
+      color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+      coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
+      dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                       biod[[groups]][,1:5])
+      colnames(dataset)[1] <-c("Network")
+      plots_grups <- list()
+      output_results <- list()
+      p.val <- c()
+      
+      #CCA
+      p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+      preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+      #Richness
+      p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+      preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+      #LCBD
+      p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+      preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+      #Turn
+      p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+      preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+      #RichDiff
+      p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
+      preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+      
+      GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
+      
+      select_p.val <- which(p.val<0.05)
+      
+      if(length(select_p.val)>0){
+        for(var in 1:length(select_p.val)){
+          ref_value <- ref_value+1
+          
+          my_data <- data.frame(cbind(dataset[,select_p.val[var]+1],dataset[,1]),
+                                mu   = GAM.pred[[select_p.val[var]]]$fit,
+                                low  = GAM.pred[[select_p.val[var]]]$fit - 1.96 * GAM.pred[[select_p.val[var]]]$se.fit,
+                                high = GAM.pred[[select_p.val[var]]]$fit + 1.96 * GAM.pred[[select_p.val[var]]]$se.fit)
+          
+          GAM_Sign_plots_total_Fluvial[[ref_value]] <-ggplot(my_data, aes(x = X2, y = X1)) +
+            geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+            geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
+            labs(title=paste("Fluvial",colnames(dataset)[select_p.val[var]+1]))+
+            ylab(colnames(dataset)[select_p.val[var]+1])+
+            theme_classic()
+      
+        }
+      }
+    }
+    
+    png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_Lineal_Diverse.png",
+        width =582*4 ,height =629*4 ,units ="px",res = 300)
+    grid.arrange(GAM_Sign_plots_total[[1]],GAM_Sign_plots_total[[2]],
+                 GAM_Sign_plots_total[[3]],GAM_Sign_plots_total_Fluvial[[1]],
+                 GAM_Sign_plots_total_Fluvial[[2]],
+                 GAM_Sign_plots_total[[4]],
+                 GAM_Sign_plots_total[[5]],GAM_Sign_plots_total[[6]],
+                 GAM_Sign_plots_total[[7]],GAM_Sign_plots_total[[8]],
+                 GAM_Sign_plots_total[[9]],GAM_Sign_plots_total[[10]],
+                 GAM_Sign_plots_total[[11]],GAM_Sign_plots_total[[12]],
+                 ncol=4,nrow=4, top="Sign_Ttla")
+    dev.off()
+    
 
 
 ##########################################

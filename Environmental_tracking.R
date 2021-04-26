@@ -340,9 +340,25 @@ for (w in 1:8) {
 }
 
 
+library(betareg)
+summary(lm(output_CCA[[8]]~All.longitudes[[8]]))
+summary(lm(output_CCA[[8]]~All.latitudes[[8]]))
 
+summary(betareg(output_CCA[[8]]~All.longitudes[[8]]))
+summary(betareg(output_CCA[[8]]~All.latitudes[[8]]))
 
-
+par(mfrow=c(1,2))
+plot(All.longitudes[[8]],output_CCA[[8]], main = titles.list[8], xlab = "Longitude")
+abline(a=summary(betareg(output_CCA[[8]]~All.longitudes[[8]]))[1]$coefficients$mean[1,1],
+       b=summary(betareg(output_CCA[[8]]~All.longitudes[[8]]))[1]$coefficients$mean[2,1])
+plot(All.latitudes[[8]],output_CCA[[8]], main = titles.list[w], xlab = "Latitude")
+abline(a=summary(betareg(output_CCA[[8]]~All.latitudes[[8]]))[1]$coefficients$mean[1,1],
+       b=summary(betareg(output_CCA[[8]]~All.latitudes[[8]]))[1]$coefficients$mean[2,1],
+       col="red",cex=3)
+text(x = 47.71,y = 0.65,
+  labels = paste("Pse-R2=",
+   round(betareg(output_CCA[[8]]~All.latitudes[[8]])$pseudo.r.squared,2)))
+   
 
 
 

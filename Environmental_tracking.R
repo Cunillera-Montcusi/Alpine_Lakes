@@ -326,18 +326,33 @@ All.latitudes <- list(env.16S$lat, env.18S$lat, env.phy$lat, env.zoo$lat,
                        env$Latitude, env$Latitude[-5], env$Latitude, pred$lat)
 titles.list <- c("Alp_S16","Alp_S18","Alp_PHYT","Alp_ZOO","Norw_Fish","Norw_ZOO","Norw_Phy","Soda")
 
-# dbRDA correlations
-par(mfrow=c(4,4))
+remotes::install_github("r-link/corrmorant")
+library(corrmorant)
+
+corplots_output <- list()
 for (w in 1:8) {
-  plot(All.longitudes[[w]],output_dbRDA[[w]], main = titles.list[w], xlab = "Longitude")
-  plot(All.latitudes[[w]],output_dbRDA[[w]], main = titles.list[w], xlab = "Latitude")
+a <- cbind(All.longitudes[[w]],All.latitudes[[w]], output_dbRDA[[w]],output_CCA[[w]])
+colnames(a) <- c("Long","Lat","dbRDA","CCA")
+corplots_output[[w]] <- ggcorrm(a, 
+        mapping = aes(col = .corr, fill = .corr),
+        bg_dia = "grey20", 
+        rescale = "by_sd") +
+  lotri(geom_smooth(method = "lm", size = .3)) +
+  lotri(geom_point(alpha = 0.5)) +
+  utri_corrtext(nrow = 2, squeeze = 0.6) +
+  dia_names(y_pos = 0.15, size = 3, color = "white") +
+  dia_density(lower = 0.3, color = "grey80", fill = "grey60", size = .3) +
+  scale_color_corr(aesthetics = c("fill", "color"))+
+  labs(title=titles.list[w])
 }
-# CCA correlations
-par(mfrow=c(4,4))
-for (w in 1:8) {
-  plot(All.longitudes[[w]],output_CCA[[w]], main = titles.list[w], xlab = "Longitude")
-  plot(All.latitudes[[w]],output_CCA[[w]], main = titles.list[w], xlab = "Latitude")
-}
+grid.newpage()
+png(filename = "Corplots_Env_Track.png" ,width=8000,height=4000,units="px",res=400)
+grid.arrange(corplots_output[[1]],corplots_output[[2]],
+             corplots_output[[3]],corplots_output[[4]],
+             corplots_output[[5]],corplots_output[[6]],
+             corplots_output[[7]],corplots_output[[8]],
+             ncol = 4, nrow=2)
+dev.off()
 
 
 library(betareg)

@@ -1143,6 +1143,45 @@ for (groups in 1:5) {
   dev.off()
 }
 
+
+# GAM models result in table format - Supplementary like_####
+biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
+Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
+
+# Add the fluvial as a sixth network
+for (t in 1:5) {
+GAMmodel_resutls_total[[t]][[6]] <- GAMmodel_resutls_fluvial[[t]]
+}
+
+table_groups <- list()
+for (groups in 1:5) {
+  a <- matrix(nrow =length(GAMmodel_resutls_total)*6,ncol = 10 )
+  row_reference <- 0
+  colnames(a) <- c("Network","Variable",
+                   "Intercept","Std.Err.","t-value","p-value","Smooth F-value","Smooth p-value","Adj R-sqr","Expl.Deviance")
+    for (net in 1:6) {
+      for (var in 1:5) {
+        row_reference <- row_reference+1
+        
+        Netw_value <- Names_Networks[net]
+        Variable_value<- colnames(biod[[groups]])[var]
+        
+        a[row_reference,] <- c(Netw_value,Variable_value,
+                               round(GAMmodel_resutls_total[[groups]][[net]][[var]]$p.coeff,2),
+                               round(GAMmodel_resutls_total[[groups]][[net]][[var]]$se[1],2),
+                               round(GAMmodel_resutls_total[[groups]][[net]][[var]]$p.t,2),
+                               round(GAMmodel_resutls_total[[groups]][[net]][[var]]$p.pv,2),
+                               round(GAMmodel_resutls_total[[groups]][[net]][[var]]$chi.sq,2),
+                               round(GAMmodel_resutls_total[[groups]][[net]][[var]]$s.pv,2),
+                               round(GAMmodel_resutls_total[[groups]][[net]][[var]]$r.sq,2),
+                               round(GAMmodel_resutls_total[[groups]][[net]][[var]]$dev.expl,2)) 
+  }
+ }
+  table_groups[[groups]] <- as.data.frame(a)
+  write.table(table_groups[[groups]], file = paste(biod_names[groups],"GAM_Results",".txt",sep = ""), sep = ",", quote = FALSE, row.names = F)
+}
+
+
 # Summary plot GAM models______________________________________ ####
 sign_netw <- list()
 sign_groups <- list()
@@ -1396,9 +1435,13 @@ plots_NMDS_total <- list()
 
 plots_NMDS_x <- list()
 plots_NMDS_total_x <- list()
+plots_NMDS_total_x_model <- list()
+plots_NMDS_total_x_model_total <- list()
 
 plots_NMDS_y <- list()
 plots_NMDS_total_y <- list()
+plots_NMDS_total_y_model <- list()
+plots_NMDS_total_y_model_total <- list()
 
 for (groups in 1:5) {
   for (net in 1:5) {
@@ -1480,6 +1523,7 @@ dataset <- data.frame(x,y,centr_iso)
                         panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
 
     sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+    plots_NMDS_total_x_model[[net]] <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))
     pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
     my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
                         mu   = pred_x$fit,
@@ -1510,6 +1554,7 @@ dataset <- data.frame(x,y,centr_iso)
   }
 
   sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+  plots_NMDS_total_y_model[[net]] <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))
   pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
   my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
                         mu   = pred_y$fit,
@@ -1543,6 +1588,8 @@ dataset <- data.frame(x,y,centr_iso)
   plots_NMDS_total[[groups]] <- plots_NMDS
   plots_NMDS_total_x[[groups]] <- plots_NMDS_x 
   plots_NMDS_total_y[[groups]] <- plots_NMDS_y
+  plots_NMDS_total_x_model_total[[groups]] <-plots_NMDS_total_x_model
+  plots_NMDS_total_y_model_total[[groups]] <- plots_NMDS_total_y_model
 }
 
 # For Fluvial network
@@ -1551,9 +1598,13 @@ plots_NMDS_total_fluvial <- list()
 
 plots_NMDS_x_fluvial <- list()
 plots_NMDS_total_x_fluvial <- list()
+plots_NMDS_total_x_model_fluvial<- list()
+plots_NMDS_total_x_model_fluvial_total<- list()
 
 plots_NMDS_y_fluvial <- list()
 plots_NMDS_total_y_fluvial <- list()
+plots_NMDS_total_y_model_fluvial<- list()
+plots_NMDS_total_y_model_fluvial_total<- list()
 
 for (groups in 1:5) {
     coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
@@ -1634,6 +1685,7 @@ for (groups in 1:5) {
             panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
     
     sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+    plots_NMDS_total_x_model_fluvial[[groups]] <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))
     pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
     my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
                           mu   = pred_x$fit,
@@ -1664,6 +1716,7 @@ for (groups in 1:5) {
     }
     
     sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+    plots_NMDS_total_y_model_fluvial[[groups]] <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))
     pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
     my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
                           mu   = pred_y$fit,
@@ -1695,7 +1748,79 @@ for (groups in 1:5) {
   plots_NMDS_total_fluvial[[groups]] <- plots_NMDS_fluvial
   plots_NMDS_total_x_fluvial[[groups]] <- plots_NMDS_x_fluvial 
   plots_NMDS_total_y_fluvial[[groups]] <- plots_NMDS_y_fluvial 
+  plots_NMDS_total_x_model_fluvial_total[[groups]] <- plots_NMDS_total_x_model_fluvial
+  plots_NMDS_total_y_model_fluvial_total[[groups]] <- plots_NMDS_total_y_model_fluvial
   }
+
+
+# GAM NMDS models result in table format - Supplementary like_####
+biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
+Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
+
+# Add the fluvial as a sixth network
+for (t in 1:5) {
+  plots_NMDS_total_x_model_total[[t]][[6]] <- plots_NMDS_total_x_model_fluvial_total[[5]][[t]]
+}
+
+# For the X axis
+table_groups <- list()
+for (groups in 1:5) {
+  a <- matrix(nrow =length(plots_NMDS_total_x_model_total[[groups]]),ncol = 10 )
+  row_reference <- 0
+  colnames(a) <- c("Network","Variable",
+                   "Intercept","Std.Err.","t-value","p-value","Smooth F-value","Smooth p-value","Adj R-sqr","Expl.Deviance")
+  for (net in 1:6) {
+      row_reference <- row_reference+1
+      
+      Netw_value <- Names_Networks[net]
+      Variable_value<- "NMDS X"
+      
+      a[row_reference,] <- c(Netw_value,Variable_value,
+                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$p.coeff,2),
+                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$se[1],2),
+                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$p.t,2),
+                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$p.pv,2),
+                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$chi.sq,2),
+                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$s.pv,2),
+                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$r.sq,2),
+                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$dev.expl,2)) 
+  }
+  table_groups[[groups]] <- as.data.frame(a)
+  write.table(table_groups[[groups]], file = paste(biod_names[groups],"GAM_NMDS_x_Results",".txt",sep = ""), sep = ",", quote = FALSE, row.names = F)
+}
+
+# Add the fluvial as a sixth network
+for (t in 1:5) {
+  plots_NMDS_total_y_model_total[[t]][[6]] <- plots_NMDS_total_y_model_fluvial_total[[5]][[t]]
+}
+# For the Y axis
+table_groups <- list()
+for (groups in 1:5) {
+  a <- matrix(nrow =length(plots_NMDS_total_y_model_total[[groups]]),ncol = 10 )
+  row_reference <- 0
+  colnames(a) <- c("Network","Variable",
+                   "Intercept","Std.Err.","t-value","p-value","Smooth F-value","Smooth p-value","Adj R-sqr","Expl.Deviance")
+  for (net in 1:6) {
+    row_reference <- row_reference+1
+    
+    Netw_value <- Names_Networks[net]
+    Variable_value<- "NMDS y"
+    
+    a[row_reference,] <- c(Netw_value,Variable_value,
+                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$p.coeff,2),
+                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$se[1],2),
+                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$p.t,2),
+                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$p.pv,2),
+                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$chi.sq,2),
+                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$s.pv,2),
+                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$r.sq,2),
+                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$dev.expl,2)) 
+  }
+  table_groups[[groups]] <- as.data.frame(a)
+  write.table(table_groups[[groups]], file = paste(biod_names[groups],"GAM_NMDS_y_Results",".txt",sep = ""), sep = ",", quote = FALSE, row.names = F)
+}
+
+
 
 # Print NMDS
 png(filename ="C:/Users/Cunilleramontcusi/NMDS_Diverse.png",

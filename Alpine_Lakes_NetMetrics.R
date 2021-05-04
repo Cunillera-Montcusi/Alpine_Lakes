@@ -1,10 +1,9 @@
-##########################################
-##########################################
-##########                      ##########
+
+#________________________________________#
+#________________________________________#
 ##########  PACKAGE UPLOADING   ##########
-##########                      ##########
-##########################################
-##########################################
+#________________________________________#
+#________________________________________#
 
 # Data treatment and analysis
 library(nlme)
@@ -18,10 +17,12 @@ library(MuMIn)
 
 # Ploting and image 
 library(ggplot2)
+library(ggforce)
 library(gtable)    
 library(grid)
 library(gridExtra) 
 library(png)
+library(viridis)
 
 # Geographicla treatment
 library(geosphere) # Charging package to caluclate distances
@@ -41,13 +42,11 @@ library(sna)
 library(igraph)
 library(dplyr)
 
-##########################################
-##########################################
-##########                      ##########
-##########  DATA UPLOADING      ##########
-##########                      ##########
-##########################################
-##########################################
+#________________________________________#
+#________________________________________#
+##########    DATA UPLOADING    ##########
+#________________________________________#
+#________________________________________#
 
 # NOTES regarding data correction____________________####
 
@@ -218,13 +217,12 @@ plot(env_data[[s]][out[-which(is.na(out))],2],env_data[[s]][out[-which(is.na(out
 # Nice colours? CUNILLERA_palette is what you need
 source("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/CUNILLERA_palette.R")
 
-##########################################
-##########################################
-##########                      ##########
+#________________________________________#
+#________________________________________#
 ##########  NETWORK BUILDING    ##########
-##########                      ##########
-##########################################
-##########################################
+#________________________________________#
+#________________________________________#
+
 
 # Uploading 
 source("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/CUNILLERA_maxcomp_gradiente.R")
@@ -290,10 +288,10 @@ for (r in 1:4) {
 grid.newpage()
 grid.arrange(maps_list[[1]],maps_list[[2]],maps_list[[3]],maps_list[[4]], ncol = 1, nrow=4)
 
-####__________________________________________________________________________________________________________###
-####__________________________________________________________________________________________________________###
+
+#________________________________________#
 # Building the whole network based on lks.global _____________________________________________________________####
-####__________________________________________________________________________________________________________###
+#________________________________________#
 
 load("lks.global.Rdata")
 
@@ -451,15 +449,15 @@ Lakes_buffer <- function(EU_lakes, Samp_lakes, buffer_distance, check_EU_Sampl_p
 #
 #
 
-#_______________________________________________________________________________________________________________###
+#________________________________________#
 # Maxmimum distance between lakes -- 600 km approximately
+## This has been uploaded to the supercomputer to calculate d.percol__________________
 max_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance = 1, 
                              check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
 # We extract the distance matrix and save it to run it externally (accelerate computing times)
 max_distance_down <- max_distance[[2]]
 #save(max_distance_down, file = "S16-values/AlPS_lakes_percol_MAX_DISTANCE.RData")
 
-##_____
 # Run the following chunk in some "supercomputer" that can last some days running and keep the result!
 # save.image with the "dist_lakes" object 
 # Also remember that you have to upload the max.comp.gradiente_NORW
@@ -478,17 +476,16 @@ max_distance_down <- max_distance[[2]]
 #which(aa[,2]==ncol(dist_lakes))[1]->k #De la llista generada selecciona la primera dist?ncia en que tots els nodes s'ajunten (la xarx de percolaci?)
 #aa[k,1]->d.percol #li donem el nom a i a?llem aquesta dist?ncia de percolaci?
 #d.percol #ladist?ncia en concret
-##____________________________________________________________ This has been uploaded to the supercomputer to calculate d.percol
 
-#_______________________________________________________________________________________________________________###
+#________________________________________#
 # Middle distance between lakes -- 300 km approximately
+## This has been uploaded to the supercomputer to calculate d.percol__________________
 mid_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance = 2, 
                              check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
 # We extract the distance matrix and save it to run it externally (accelerate computing times)
 mid_distance_down <- mid_distance[[2]]
 #save(mid_distance_down, file = "S16-values/AlPS_lakes_percol_MID_DISTANCE.RData")
 
-##_____
 # Run the following chunk in some "supercomputer" that can last some days running and keep the result!
 # save.image with the "dist_lakes" object 
 # Also remember that you have to upload the max.comp.gradiente_NORW
@@ -507,17 +504,16 @@ mid_distance_down <- mid_distance[[2]]
 #which(aa[,2]==ncol(dist_lakes))[1]->k #De la llista generada selecciona la primera dist?ncia en que tots els nodes s'ajunten (la xarx de percolaci?)
 #aa[k,1]->d.percol #li donem el nom a i a?llem aquesta dist?ncia de percolaci?
 #d.percol #ladist?ncia en concret
-##____________________________________________________________ This has been uploaded to the supercomputer to calculate d.percol
 
-#_______________________________________________________________________________________________________________###
+#________________________________________#
 # Medium middle (MID_MID) distance between lakes -- 100 km approximately
+## This has been uploaded to the supercomputer to calculate d.percol__________________
 mid_mid_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance = 6, 
                                  check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
 # We extract the distance matrix and save it to run it externally (accelerate computing times)
 mid_mid_distance_down <- mid_mid_distance[[2]]
 #save(mid_mid_distance_down, file = "S16-values/AlPS_lakes_percol_MID_MID_DISTANCE.RData")
 
-##_____
 # Run the following chunk in some "supercomputer" that can last some days running and keep the result!
 # save.image with the "dist_lakes" object 
 # Also remember that you have to upload the max.comp.gradiente_NORW
@@ -536,9 +532,8 @@ mid_mid_distance_down <- mid_mid_distance[[2]]
 #which(aa[,2]==ncol(dist_lakes))[1]->k #De la llista generada selecciona la primera dist?ncia en que tots els nodes s'ajunten (la xarx de percolaci?)
 #aa[k,1]->d.percol #li donem el nom a i a?llem aquesta dist?ncia de percolaci?
 #d.percol #ladist?ncia en concret
-##____________________________________________________________ This has been uploaded to the supercomputer to calculate d.percol
 
-#_______________________________________________________________________________________________________________###
+#________________________________________#
 # Small distance, A tenth of the maximum distance -- 60km approximately
 small_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance = 10, 
                                check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
@@ -567,9 +562,8 @@ ALP_SMALL_xarxa <- small_distance_down
 ALP_SMALL_xarxa[position_node_above10_SMALL,position_node_above10_SMALL] <- ifelse(ALP_SMALL_xarxa[position_node_above10_SMALL,position_node_above10_SMALL]>d.percol_FIRST,0,1)
 ALP_SMALL_xarxa[position_node_below10_SMALL,position_node_below10_SMALL] <- ifelse(ALP_SMALL_xarxa[position_node_below10_SMALL,position_node_below10_SMALL]>d.percol_SECOND,0,1)
 ALP_SMALL_xarxa <- ifelse(ALP_SMALL_xarxa>1,0,ALP_SMALL_xarxa)
-##____________________________________________________________
 
-#_______________________________________________________________________________________________________________###
+#________________________________________#
 # The smallest distance (minimum), basically individual lakes or nearby (almost touching) lakes -- 6km approximately
 min_distance <- Lakes_buffer(EU_lakes = dat, Samp_lakes = dat1, buffer_distance = 100, 
                              check_EU_Sampl_plots = F, check_BUFFER_plots = T,check_ELIMINATION_goodLAKES_plots = F )
@@ -596,9 +590,8 @@ ALP_MIN_xarxa <- min_distance_down
 ALP_MIN_xarxa[position_node_above10_MIN,position_node_above10_MIN] <- ifelse(ALP_MIN_xarxa[position_node_above10_MIN,position_node_above10_MIN]>d.percol_FIRST,0,1)
 ALP_MIN_xarxa[position_node_below10_MIN,position_node_below10_MIN] <- ifelse(ALP_MIN_xarxa[position_node_below10_MIN,position_node_below10_MIN]>d.percol_SECOND,0,1)
 ALP_MIN_xarxa <- ifelse(ALP_MIN_xarxa>1,0,ALP_MIN_xarxa)
-##____________________________________________________________ 
 
-
+#________________________________________#
 # I already calculated the percolation distance for each network and already noted it in the following lines. 
 #there is no need to upload the values in the three major cases. 
 #MAX= 1422222
@@ -620,37 +613,12 @@ ALP_MID_xarxa <- ifelse(ALP_MID_xarxa>68732.87,0,1)
 cordenades_xarxes <-list(max_distance[[1]],mid_distance[[1]],mid_mid_distance[[1]], small_distance[[1]], min_distance[[1]]) 
 MAPS_xarxes <- list(ALP_MAX_xarxa, ALP_MID_xarxa, ALP_MID_MID_xarxa, ALP_SMALL_xarxa, ALP_MIN_xarxa)
 
-maps_Alps <- list()
-detach("package:igraph", unload = TRUE)
-for (e in 1:length(cordenades_xarxes)) {
-  factors <- rep("No_Sampled",nrow(MAPS_xarxes[[e]]))
-  factors[c(nrow(MAPS_xarxes[[e]])-54):nrow(MAPS_xarxes[[e]])] <- "Sampled"
-  
-  n<- network(MAPS_xarxes[[e]], directed=F, diag=F)
-  n %v% "family" <- factors # Family is an standard name for the categortical variable that we are creating 
-  maps_Alps[[e]] <- ggplot(n, layout=as.matrix(cordenades_xarxes[[e]][,1:2]),
-                           aes(x = x, y = y, xend = xend, yend = yend))+
-    geom_edges( color = "grey45", alpha= 0.4) +
-    geom_nodes(aes(fill=family, alpha=family), size=2 ,color="black", shape=21)+
-    labs(x="",y="")+
-    scale_fill_manual(values = c("grey35","red"))+
-    scale_alpha_manual(values = c(0.5,1))+
-    theme(axis.text = element_blank(),
-          axis.ticks = element_blank(),
-          legend.position = "none")
-}
+#________________________________________#
+#________________________________________#
+######## RIVER NETWORK BUILDING ##########
+#________________________________________#
+#________________________________________#
 
-png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps.png",width =745 ,height =742 ,units ="px",res = 100)
-grid.arrange(maps_Alps[[1]],maps_Alps[[2]],maps_Alps[[3]],maps_Alps[[4]],maps_Alps[[5]])
-dev.off()
-
-############################################
-############################################
-##########                        ##########
-########## RIVER NETWORK BUILDING ##########
-##########                        ##########
-############################################
-############################################
 # Print de coordinates of the two smaller scales to posteriorly trim the "river" network in Arcgis
 #write.dbf(max_distance[[1]], "GIS_data/max_distance.dbf")
 #write.dbf(mid_distance[[1]], "GIS_data/mid_distance.dbf")
@@ -713,43 +681,53 @@ ConComp = components(GRAPH_xarxes_fluvial[[1]])
 cols <-ConComp$membership 
 cols[unlist(res.nv[[3]])[correspondence_BASINS]] <- "red"
 cols <- ifelse(cols==1, "green",ifelse(cols==2,"blue","red"))
-sizes <- ifelse(cols=="red",10,1)
+sizes <- ifelse(cols=="red",1.2,0.4)
 
-png(filename = "C:/Users/Cunilleramontcusi/Alpine_fluvial.png", width = 20000, height = 20000, res=1000)
+png(filename = "C:/Users/Cunilleramontcusi/Alpine_fluvial.png", width = 20000, height = 20000, res=500)
 par(mar=c(0,0,0,0))
 plot(GRAPH_xarxes_fluvial[[1]], vertex.label = NA, vertex.size = sizes, vertex.size2 = sizes, vertex.color=cols,
-     edge.width=0.01, edge.color="grey50")
+     edge.width=0.01,edge.size=0.01, edge.color="grey50")
 dev.off()
 detach("package:shp2graph", unload = TRUE)
 
-
-##########################################
-##########################################
-##########                      ##########
-##########  CENTRALITY VALUES   ##########
-##########                      ##########
-##########################################
-##########################################
+#________________________________________#
+#________________________________________#
+########    CENTRALITY VALUES   ##########
+#________________________________________#
+#________________________________________#
 
 # Calculation of network data for the 55 lakes (closeness, degree, between, evcent, subgraph centrality)
 network_data <- list()
+detach("package:sna", unload = TRUE)
+library(igraph)
 for (i in 1:length(MAPS_xarxes)) {
   Xarx_grpah <- graph.adjacency(MAPS_xarxes[[i]], mode = "undirected",diag = F)
-  output <- matrix(nrow = nrow(MAPS_xarxes[[i]]), ncol = 5)
+  output <- matrix(nrow = nrow(MAPS_xarxes[[i]]), ncol = 3)
   
   network_data[[i]] <- output
   
   network_data[[i]][,1] <- closeness(Xarx_grpah, mode = "all")
-  network_data[[i]][,2] <- subgraph.centrality(Xarx_grpah)
-  network_data[[i]][,3] <- degree(Xarx_grpah)
-  network_data[[i]][,4] <- evcent(Xarx_grpah)[[1]]
-  network_data[[i]][,5] <- betweenness(Xarx_grpah, directed = F)
+  network_data[[i]][,2] <- degree(Xarx_grpah)
+  network_data[[i]][,3] <- betweenness(Xarx_grpah, directed = F)
   
-  
-  colnames(network_data[[i]]) <- c("clo_ALPS","Sub_centr_ALPS","deg_ALPS","Eigvec_cent_ALPS","bet_ALPS")
+  if(components(Xarx_grpah)$no>1){
+    # Closenness
+    a <- which(components(Xarx_grpah)$membership==1)
+    network_data[[i]][a,1]<- network_data[[1]][a,1]/max(network_data[[1]][a,1])
+    b <- which(components(Xarx_grpah)$membership==2)
+    network_data[[i]][b,1] <- network_data[[1]][b,1]/max(network_data[[1]][b,1])
+    
+    # Betweenness
+    a <- which(components(Xarx_grpah)$membership==1)
+    network_data[[i]][a,3]<- network_data[[1]][a,3]/max(network_data[[1]][a,3])
+    b <- which(components(Xarx_grpah)$membership==2)
+    network_data[[i]][b,3] <- network_data[[1]][b,3]/max(network_data[[1]][b,3])
+  }
+  colnames(network_data[[i]]) <- c("clo_ALPS","deg_ALPS","bet_ALPS")
 }
 
-
+# Flulvial
+library(igraph)
 fluvial_network_data <- list()
 output <- matrix(nrow = length(V(GRAPH_xarxes_fluvial[[1]])), ncol = 3)
 
@@ -761,12 +739,14 @@ fluvial_network_data[[1]][,3] <- betweenness(GRAPH_xarxes_fluvial[[1]])
 
 colnames(fluvial_network_data[[1]]) <- c("clo_ALPS","deg_ALPS","bet_ALPS")
 
-# Saving the list with the FIVE matrices with the network values 
-save(network_data, file = "S16-values/network_dataset.RData")
-save(fluvial_network_data, file = "S16-values/fluvial_network_dataset.RData")
+#Homogeneizing dataset according to catchments
+#Closeness
+a <- which(ConComp$membership==1)
+fluvial_network_data[[1]][a,1]<- fluvial_network_data[[1]][a,1]/max(fluvial_network_data[[1]][a,1])
+b <- which(ConComp$membership==2)
+fluvial_network_data[[1]][b,1] <- fluvial_network_data[[1]][b,1]/max(fluvial_network_data[[1]][b,1])
 
-load("S16-values/network_dataset.RData")
-load("S16-values/fluvial_network_dataset.RData")
+# PCA and plots
 
 library(ggfortify)
 PCA_network_results <- list()
@@ -774,34 +754,68 @@ PCA_network_plot<- list()
 for (r in 1:length(network_data)) {
   PCA_result <- prcomp(network_data[[r]], center = T, scale. = T)
   PCA_network_plot[[r]] <- PCA_result
-  PCA_network_results[[r]] <-PCA_result$x[,1]
+  PCA_network_results[[r]] <-network_data[[r]][,1] #PCA_result$x[,1]
 }
 names(PCA_network_results) <- c("max_PCA_network","mid_PCA_network","mid_mid_PCA_network",
                                 "small_PCA_network","min_PCA_network")
 
-PCA_network_results[[1]] <- PCA_network_results[[1]]*-1
+#grid.arrange(autoplot(PCA_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+#                      loadings.colour = 'red', loadings.label.colour="black")+
+#               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
+#               theme_bw(), 
+#             autoplot(PCA_network_plot[[2]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+#                      loadings.colour = 'red', loadings.label.colour="black")+
+#               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~300km")+
+#               theme_bw(),
+#             autoplot(PCA_network_plot[[3]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+#                      loadings.colour = 'red', loadings.label.colour="black")+
+#               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~100km")+
+#               theme_bw(),
+#             autoplot(PCA_network_plot[[4]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+#                      loadings.colour = 'red', loadings.label.colour="black")+
+#               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~60km")+
+#               theme_bw(),
+#             autoplot(PCA_network_plot[[5]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+#                      loadings.colour = 'red', loadings.label.colour="black")+
+#               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~6km")+
+#               theme_bw(),  
+#             ncol = 2, nrow=3)
+#
+#PCA_network_results[[1]] <- PCA_network_results[[1]]*-1
+#PCA_network_results[[2]] <- PCA_network_results[[2]]*-1
+#PCA_network_results[[5]] <- PCA_network_results[[5]]*-1
 
-grid.arrange(autoplot(PCA_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
-               theme_bw(), 
-             autoplot(PCA_network_plot[[2]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~300km")+
-               theme_bw(),
-             autoplot(PCA_network_plot[[3]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~100km")+
-               theme_bw(),
-             autoplot(PCA_network_plot[[4]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~60km")+
-               theme_bw(),
-             autoplot(PCA_network_plot[[5]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-                      loadings.colour = 'red', loadings.label.colour="black")+
-               geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~6km")+
-               theme_bw(),  
-             ncol = 2, nrow=3)
+#Plots closeness maps - pallete viridis
+maps_Alps <- list()
+detach("package:igraph", unload = TRUE)
+library(sna)
+for (e in 1:length(cordenades_xarxes)) {
+  factors <- rep("No_Sampled",nrow(MAPS_xarxes[[e]]))
+  factors[c(nrow(MAPS_xarxes[[e]])-54):nrow(MAPS_xarxes[[e]])] <- "Sampled"
+  CC_values <- PCA_network_results[[e]]
+  
+  n<- network(MAPS_xarxes[[e]], directed=F, diag=F)
+  n %v% "family" <- factors # Family is an standard name for the categortical variable that we are creating
+  n %v% "CC_values" <- CC_values
+  
+  maps_Alps[[e]] <- ggplot(n, layout=as.matrix(cordenades_xarxes[[e]][,1:2]),
+                           aes(x = x, y = y, xend = xend, yend = yend))+
+    geom_edges( color = "grey40", size=0.1, alpha=0.4) +
+    geom_nodes(aes(fill=CC_values,alpha=family, size=family),color ="grey20" ,shape=21, alpha=.75)+
+    scale_fill_viridis(discrete = F,direction = -1)+
+    labs(x="",y="")+
+    scale_alpha_manual(values = c(0.2,5))+
+    scale_size_manual(values = c(1,3))+
+    theme_classic()+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          legend.position = "none",
+          panel.background=element_rect(colour="black"))
+}
+
+png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps.png",width =745 ,height =742 ,units ="px",res = 100)
+grid.arrange(maps_Alps[[1]],maps_Alps[[2]],maps_Alps[[3]],maps_Alps[[4]],maps_Alps[[5]])
+dev.off()
 
 
 library(ggfortify)
@@ -810,25 +824,40 @@ PCA_fluvial_network_plot<- list()
 
 PCA_fluvial_result <- prcomp(fluvial_network_data[[1]], center = T, scale. = T)
 PCA_fluvial_network_plot[[1]] <- PCA_fluvial_result
-PCA_fluvial_network_results[[1]] <-PCA_fluvial_result$x[,1]
+PCA_fluvial_network_results[[1]] <-fluvial_network_data[[1]][,1]
 
 names(PCA_fluvial_network_results) <- c("PCA_fluvial_network")
 
-autoplot(PCA_fluvial_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
-         loadings.colour = 'red', loadings.label.colour="black")+
-  geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
-  theme_bw()
+#autoplot(PCA_fluvial_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
+#         loadings.colour = 'red', loadings.label.colour="black")+
+#  geom_point(size=2, alpha=0.1,color=CUNILLERA_cols("black"))+labs(title="~600km")+
+#  theme_bw()
 
+#Plot centrality values in river network
+cols <-ConComp$membership 
+cols[unlist(res.nv[[3]])[correspondence_BASINS]] <- "red"
+cols <- ifelse(cols==1, "green",ifelse(cols==2,"blue","red"))
+sizes <- ifelse(cols=="red",1.5,0.5)
 
-##########################################
-##########################################
-##########                      ##########
-##########  DIVERSITY VALUES    ##########
-##########                      ##########
-##########################################
-##########################################
+rbPal <- viridis_pal(1,0,1)
+#Plots closeness "all"
+# Relevant that "png" output size will be big (nice arrows plotted)
+#This adds a column of color values based on the y values
+Col <- rbPal(length(fluvial_network_data[[1]][,1]))[as.numeric(cut(fluvial_network_data[[1]][,1],breaks = length(fluvial_network_data[[1]][,1])))]
+Col[which(cols=="red")] <- "red"
+png(filename = "C:/Users/Cunilleramontcusi/Alpine_fluvial_CLOS.png", width = 20000, height = 20000, res=500)
+par(mar=c(0,0,0,0))
+plot(GRAPH_xarxes_fluvial[[1]], vertex.label = NA, vertex.size = 1, vertex.size2 = sizes, vertex.color=Col,
+     edge.width=0.01, edge.color="grey50")
+dev.off()
 
-##### Community indices list to gather everything 
+#________________________________________#
+#________________________________________#
+########    DIVERSITY VALUES    ##########
+#________________________________________#
+#________________________________________#
+
+#### Community indices list to gather everything 
 
 community_indices<- list()
 
@@ -837,14 +866,16 @@ community_indices<- list()
 # CCA
 tst_coeficient_out <- list()
 for (r in 1:5) {
-  cca1<-cca(comm_data[[r]]~as.matrix(env_data[[r]][,4:6]))
+  cca1<-cca(comm_data[[r]]~as.matrix(env_data[[r]][,4:8]))
   fitteds <- fitted(cca1, model="CCA", type= "response")
   coeffici <- c()
   for (e in 1:nrow(comm_data[[r]])) {
     coeffici[e] <- cor(fitteds[e,],as.numeric(comm_data[[r]][e,]),method = "pearson")
   }
+  coeffici <- ifelse(coeffici<0,0,coeffici)
   tst_coeficient_out[[r]] <- coeffici
 }
+
 community_indices[[1]] <- tst_coeficient_out
 names(community_indices[[1]]) <- c("EnvTrack_CCA_S16","EnvTrack_CCA_S18","EnvTrack_CCA_PHY","EnvTrack_CCA_ZOO", "EnvTrack_CCA_18S.ZOO") 
 
@@ -903,13 +934,11 @@ for (r in 1:5) {
 } 
 biod
 
-##########################################
-##########################################
-##########                      ##########
+#________________________________________#
+#________________________________________#
 ##########  NET vs DIV VALUES   ##########
-##########                      ##########
-##########################################
-##########################################
+#________________________________________#
+#________________________________________#
 
 # Extracting the values of which lakes have been sampled for each taxonomic group
 # S16 = 52 lakes
@@ -933,13 +962,15 @@ for (r in 1:5) {
 }
 
 
-# Non-Linear models______________________________________ ####
+# GAM models______________________________________ ####
+Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km")
 
 GAMmodel_resutls_total <- list()
 GAM_model_resutls <- list()
 GAM_direct_model <- list()
 GAM_direct_model_total <- list()
 
+# For Euclidean network
 for (groups in 1:5) {
   color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
   for (net in 1:5) {
@@ -988,20 +1019,26 @@ for (groups in 1:5) {
                               high = GAM.pred[[var]]$fit + 1.96 * GAM.pred[[var]]$se.fit)
         plots_grups[[var]] <-
           ggplot(my_data, aes(x = X2, y = X1)) +
-          geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+          geom_jitter(alpha=0.2, shape=21, size=3, colour="black", aes(fill=X2))+
+          scale_fill_continuous(type = "viridis")+
           geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
           labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
-          theme_classic()
+          theme_classic()+
+          theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
+                legend.position = "none") 
       }else{
         my_data <- data.frame(cbind(dataset[,var+1],dataset[,1]),
                               mu   = GAM.pred[[var]]$fit,
                               low  = GAM.pred[[var]]$fit - 1.96 * GAM.pred[[var]]$se.fit,
                               high = GAM.pred[[var]]$fit + 1.96 * GAM.pred[[var]]$se.fit)
         plots_grups[[var]] <-ggplot(my_data, aes(x = X2, y = X1)) +
-          geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+          geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
+          scale_fill_continuous(type = "viridis")+
           geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
           labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
-          theme_classic()
+          theme_classic()+
+          theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
+                legend.position = "none")  
       }
     }
     
@@ -1020,7 +1057,7 @@ for (groups in 1:5) {
   GAM_direct_model_total[[groups]]<- GAM_direct_model
 }             
 
-#_____________________________________________________________________________________________________________________________________________#
+# For fluvial network
 GAMmodel_resutls_fluvial <- list()
 GAM_direct_model_fluvial<- list()
 
@@ -1071,20 +1108,26 @@ for (groups in 1:5) {
                             high = GAM.pred[[var]]$fit + 1.96 * GAM.pred[[var]]$se.fit)
       plots_grups[[var]] <-
         ggplot(my_data, aes(x = X2, y = X1)) +
-        geom_jitter(alpha=0.2, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_jitter(alpha=0.2, shape=21, size=3, colour="black", aes(fill=X2))+
+        scale_fill_continuous(type = "viridis")+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
         labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
-        theme_classic()
+        theme_classic()+
+        theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
+              legend.position = "none")  
     }else{
       my_data <- data.frame(cbind(dataset[,var+1],dataset[,1]),
                             mu   = GAM.pred[[var]]$fit,
                             low  = GAM.pred[[var]]$fit - 1.96 * GAM.pred[[var]]$se.fit,
                             high = GAM.pred[[var]]$fit + 1.96 * GAM.pred[[var]]$se.fit)
       plots_grups[[var]] <-ggplot(my_data, aes(x = X2, y = X1)) +
-        geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
+        scale_fill_continuous(type = "viridis")+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
         labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
-        theme_classic()
+        theme_classic()+
+        theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
+              legend.position = "none")  
     }
   }
   
@@ -1100,7 +1143,7 @@ for (groups in 1:5) {
   dev.off()
 }
 
-# PLot to summarize GAM models ____________________________________________________####
+# Summary plot GAM models______________________________________ ####
 sign_netw <- list()
 sign_groups <- list()
 for (group in 1:5) {
@@ -1200,7 +1243,8 @@ dev.off()
 
 
 
-# GAM plot for the same- only significant plots (Article plots)________________________####
+# GAM plot significant______________________________________ ####
+# For Euclidean network
 GAM_Sign_plots_total <- list()
 ref_value <- 0
 for (groups in 1:5) {
@@ -1242,17 +1286,19 @@ for (groups in 1:5) {
                               low  = GAM.pred[[select_p.val[var]]]$fit - 1.96 * GAM.pred[[select_p.val[var]]]$se.fit,
                               high = GAM.pred[[select_p.val[var]]]$fit + 1.96 * GAM.pred[[select_p.val[var]]]$se.fit)
         GAM_Sign_plots_total[[ref_value]] <-ggplot(my_data, aes(x = X2, y = X1)) +
-          geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
-          geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
-          labs(title=paste(Names_Networks[[net]],colnames(dataset)[var+1]))+
+          geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
+          scale_fill_continuous(type = "viridis")+
+          geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
+          labs(title=paste(Names_Networks[[net]],colnames(dataset)[select_p.val[var]+1]))+
           ylab(colnames(dataset)[var+1])+
-          theme_classic()
+          theme_classic()+
+          theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
+                legend.position = "none")  
       }
     }
   }
 }             
-
-
+# For Fluvial network
 GAM_Sign_plots_total_Fluvial <- list()
 ref_value <- 0
 for (groups in 1:5) {
@@ -1295,35 +1341,56 @@ for (groups in 1:5) {
                             high = GAM.pred[[select_p.val[var]]]$fit + 1.96 * GAM.pred[[select_p.val[var]]]$se.fit)
       
       GAM_Sign_plots_total_Fluvial[[ref_value]] <-ggplot(my_data, aes(x = X2, y = X1)) +
-        geom_jitter(alpha=0.9, shape=21, size=3, fill=color_groups[groups], colour="black")+
+        geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
+        scale_fill_continuous(type = "viridis")+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
         labs(title=paste("Fluvial",colnames(dataset)[select_p.val[var]+1]))+
         ylab(colnames(dataset)[select_p.val[var]+1])+
-        theme_classic()
+        theme_classic()+
+        theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
+              legend.position = "none")  
       
     }
   }
 }
 
-png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_Lineal_Diverse.png",
+# Plot extraction
+plot_plot_sign_plot <- list()
+for(t in 1:length(GAM_Sign_plots_total)){
+  plot_plot_sign_plot[[t]] <- GAM_Sign_plots_total[[t]]
+}
+for(d in c(length(GAM_Sign_plots_total)+1):c(length(GAM_Sign_plots_total)+length(GAM_Sign_plots_total_Fluvial))){
+  plot_plot_sign_plot[[d]] <- GAM_Sign_plots_total_Fluvial[[d-length(GAM_Sign_plots_total)]]
+}
+
+# Printing for Env_Tracking
+png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_EnvTrack.png",
     width =582*4 ,height =629*4 ,units ="px",res = 300)
-grid.arrange(GAM_Sign_plots_total[[1]],GAM_Sign_plots_total[[2]],
-             GAM_Sign_plots_total[[3]],GAM_Sign_plots_total_Fluvial[[1]],
-             GAM_Sign_plots_total_Fluvial[[2]],
-             GAM_Sign_plots_total[[4]],
-             GAM_Sign_plots_total[[5]],GAM_Sign_plots_total[[6]],
-             GAM_Sign_plots_total[[7]],GAM_Sign_plots_total[[8]],
-             GAM_Sign_plots_total[[9]],GAM_Sign_plots_total[[10]],
-             GAM_Sign_plots_total[[11]],GAM_Sign_plots_total[[12]],
-             ncol=4,nrow=4, top="Sign_Ttla")
+grid.arrange(plot_plot_sign_plot[[1]],plot_plot_sign_plot[[2]],plot_plot_sign_plot[[4]],
+             plot_plot_sign_plot[[11]],plot_plot_sign_plot[[21]],plot_plot_sign_plot[[25]],
+             ncol=2,nrow=3, top="Sign_Ttla")
+dev.off()
+
+# Printing for Diverse
+png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_Diverse.png",
+    width =629*6 ,height =629*6 ,units ="px",res = 300)
+grid.arrange(plot_plot_sign_plot[[3]],plot_plot_sign_plot[[5]], plot_plot_sign_plot[[6]],
+             plot_plot_sign_plot[[7]],plot_plot_sign_plot[[8]],plot_plot_sign_plot[[9]],
+             plot_plot_sign_plot[[10]],plot_plot_sign_plot[[12]],
+             plot_plot_sign_plot[[13]],plot_plot_sign_plot[[14]],plot_plot_sign_plot[[15]],
+             plot_plot_sign_plot[[16]],plot_plot_sign_plot[[17]],plot_plot_sign_plot[[18]],
+             plot_plot_sign_plot[[19]],plot_plot_sign_plot[[20]],plot_plot_sign_plot[[22]],
+             plot_plot_sign_plot[[23]],plot_plot_sign_plot[[24]],plot_plot_sign_plot[[26]],
+             ncol=4,nrow=5, top="Sign_Ttla")
 dev.off()
 
 
-# NMDS plot (Article plots)________________________####
+# NMDS plots______________________________________ ####
 biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
 net_names <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
 color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
 
+# For Euclidean network
 plots_NMDS <- list()
 plots_NMDS_total <- list()
 
@@ -1345,20 +1412,76 @@ x <- spe.abu.MDS$points[,1]
 y <- spe.abu.MDS$points[,2]
 
 dataset <- data.frame(x,y,centr_iso)
+    # Create categorical varaible according to centrality values - four levels
+    centr_iso_fact <- cut(dataset$centr_iso, breaks = 4,labels=c("A","B","C","D"))
+    dataset[,4] <- centr_iso_fact
+    
+    # Ordiplots in ggplot from: https://rdrr.io/github/jfq3/ggordiplots/src/R/gg_ordiplot.R
+    #' Make Ordination Axis Labels
+    #' Makes ordination axis labels that include, if apprpriate, the \% total variance explained by each axis.
+    ord_labels <-function(ord){
+  ev <- vegan::eigenvals(ord)
+  if (!is.na(ev)[1]) {
+    tol <- -(1e-07)*ev[1]
+    ord.labels <- rep("", length(ev))
+    if ((any(is.na(ev))) | (any(ev < tol))) {
+      for ( i in 1:length(ev)) {
+        ord.labels[i] <- paste("DIM", i, sep = "")
+      }
+    }
+    else {
+      ev.pc <- round(100*(ev/sum(ev)), 2)
+      axis.names <- names(ev)
+      if (is.null(axis.names)) {
+        for ( i in 1:length(ev.pc)) {
+          ord.labels[i] <- paste("DIM", i, " ", sprintf(ev.pc[i], fmt = '%#.1f'), "%", sep="")
+        }
+      } else {
+        for (i in 1:length(ev.pc)){
+          ord.labels[i] <- paste(axis.names[i], " ", ev.pc[i],"%", sep="")
+        }
+      }
+    }
+  } else {
+    ord.labels <- colnames(vegan::scores(ord))
+  }
+  
+  return(ord.labels)
+}
+    
+    # Get site coordinates to plot.
+    df_ord <- vegan::scores(spe.abu.MDS, display = "sites", scaling=1, choices=c(1,2))
+    axis.labels <- ord_labels(spe.abu.MDS)[c(1,2)]
+    df_ord <- data.frame(x=df_ord[,1], y=df_ord[,2], Group= dataset[,4])
+    # Get parameters from the ordiellipse function.
+    rslt <- vegan::ordiellipse(spe.abu.MDS, groups=dataset[,4], display = "sites", 
+                               scaling=1, choices=c(1,2), kind = "sd", show.groups = as.vector(levels(dataset[,4])), draw = "none", label = F)
+    # Get points to plot for the ellipses.
+    df_ellipse <- data.frame()
+    for(g in as.vector(levels(dataset[,4]))) {
+      df_ellipse <- rbind(df_ellipse, 
+                          cbind(as.data.frame(with(df_ord[df_ord$Group==g,],
+                                                   vegan:::veganCovEllipse(rslt[[g]]$cov,rslt[[g]]$center, rslt[[g]]$scale))),Group=g))
+    }
+    colnames(df_ellipse) <- c("x", "y", "Group")
+    df_ellipse <- df_ellipse[ , c(3,1,2)]
 
-plots_NMDS[[net]] <- ggplot(dataset, aes(x=x,y=y, fill=centr_iso))+
+    plots_NMDS[[net]] <- ggplot(dataset, aes(x=x,y=y))+
                   geom_vline(xintercept = 0)+geom_hline(yintercept = 0)+
-                  geom_jitter(shape=21, size=5, alpha=0.8)+
+                  geom_jitter(shape=21, size=5, alpha=0.8, aes(fill=centr_iso))+
+                  geom_path(data = df_ellipse, aes(x=x, y=y, colour=Group), size=2, show.legend = FALSE)+
+                  scale_colour_manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
                   scale_fill_continuous(type = "viridis")+
                   labs(title = biod_names[groups], 
                        subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
                   xlab("NMDS1")+ylab("NMDS2")+
                   theme_classic()+
-                  theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
+                  theme(legend.position = "none",
+                        panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
 
-  sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-  pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
-  my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
+    sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+    pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
                         mu   = pred_x$fit,
                         low  = pred_x$fit - 1.96 * pred_x$se.fit,
                         high = pred_x$fit + 1.96 * pred_x$se.fit)
@@ -1371,7 +1494,8 @@ plots_NMDS[[net]] <- ggplot(dataset, aes(x=x,y=y, fill=centr_iso))+
                        subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
                   xlab("Centrality-Isolation")+ylab("NMDS1")+
                   theme_classic()+
-                  theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
+                  theme(legend.position = "none",
+                        panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
   }else{
     plots_NMDS_x[[net]] <- ggplot(my_data, aes(x = X2, y = X1)) +
       geom_jitter(alpha=0.5,shape=21, size=5, aes(fill=X2))+
@@ -1381,7 +1505,8 @@ plots_NMDS[[net]] <- ggplot(dataset, aes(x=x,y=y, fill=centr_iso))+
            subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
       xlab("Centrality-Isolation")+ylab("NMDS1")+
       theme_classic()+
-      theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+      theme(legend.position = "none",
+            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
   }
 
   sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
@@ -1399,7 +1524,8 @@ plots_NMDS[[net]] <- ggplot(dataset, aes(x=x,y=y, fill=centr_iso))+
            subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
       xlab("Centrality-Isolation")+ylab("NMDS2")+
       theme_classic()+
-      theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+      theme(legend.position = "none",
+            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
   }else{
     plots_NMDS_y[[net]] <- ggplot(my_data, aes(x = X2, y = X1)) +
       geom_jitter(alpha=0.5,shape=21, size=5, aes(fill=X2))+
@@ -1409,7 +1535,8 @@ plots_NMDS[[net]] <- ggplot(dataset, aes(x=x,y=y, fill=centr_iso))+
            subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
       xlab("Centrality-Isolation")+ylab("NMDS2")+
       theme_classic()+
-      theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+      theme(legend.position = "none",
+            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
     }
 
   }
@@ -1418,7 +1545,16 @@ plots_NMDS[[net]] <- ggplot(dataset, aes(x=x,y=y, fill=centr_iso))+
   plots_NMDS_total_y[[groups]] <- plots_NMDS_y
 }
 
+# For Fluvial network
+plots_NMDS_fluvial<- list()
 plots_NMDS_total_fluvial <- list()
+
+plots_NMDS_x_fluvial <- list()
+plots_NMDS_total_x_fluvial <- list()
+
+plots_NMDS_y_fluvial <- list()
+plots_NMDS_total_y_fluvial <- list()
+
 for (groups in 1:5) {
     coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
     centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
@@ -1430,90 +1566,389 @@ for (groups in 1:5) {
     y <- spe.abu.MDS$points[,2]
     
     dataset <- data.frame(x,y,centr_iso)
+    # Create categorical varaible according to centrality values - four levels
+    centr_iso_fact <- cut(dataset$centr_iso, breaks = 4,labels=c("A","B","C","D"))
+    dataset[,4] <- centr_iso_fact
     
-    plots_NMDS_total_fluvial[[groups]] <- ggplot(dataset, aes(x=x,y=y, fill=centr_iso))+
+# Ordiplots in ggplot from: https://rdrr.io/github/jfq3/ggordiplots/src/R/gg_ordiplot.R
+  #' Make Ordination Axis Labels
+  #' Makes ordination axis labels that include, if apprpriate, the \% total variance explained by each axis.
+    ord_labels <-function(ord){
+          ev <- vegan::eigenvals(ord)
+          if (!is.na(ev)[1]) {
+            tol <- -(1e-07)*ev[1]
+            ord.labels <- rep("", length(ev))
+            if ((any(is.na(ev))) | (any(ev < tol))) {
+              for ( i in 1:length(ev)) {
+                ord.labels[i] <- paste("DIM", i, sep = "")
+              }
+            }
+            else {
+              ev.pc <- round(100*(ev/sum(ev)), 2)
+              axis.names <- names(ev)
+              if (is.null(axis.names)) {
+                for ( i in 1:length(ev.pc)) {
+                  ord.labels[i] <- paste("DIM", i, " ", sprintf(ev.pc[i], fmt = '%#.1f'), "%", sep="")
+                }
+              } else {
+                for (i in 1:length(ev.pc)){
+                  ord.labels[i] <- paste(axis.names[i], " ", ev.pc[i],"%", sep="")
+                }
+              }
+            }
+          } else {
+            ord.labels <- colnames(vegan::scores(ord))
+          }
+          
+          return(ord.labels)
+    }
+    
+    # Get site coordinates to plot.
+    df_ord <- vegan::scores(spe.abu.MDS, display = "sites", scaling=1, choices=c(1,2))
+    axis.labels <- ord_labels(spe.abu.MDS)[c(1,2)]
+    df_ord <- data.frame(x=df_ord[,1], y=df_ord[,2], Group= dataset[,4])
+    # Get parameters from the ordiellipse function.
+    rslt <- vegan::ordiellipse(spe.abu.MDS, groups=dataset[,4], display = "sites", 
+    scaling=1, choices=c(1,2), kind = "sd", show.groups = as.vector(levels(dataset[,4])), draw = "none", label = F)
+    # Get points to plot for the ellipses.
+    df_ellipse <- data.frame()
+    for(g in as.vector(levels(dataset[,4]))) {
+      df_ellipse <- rbind(df_ellipse, 
+      cbind(as.data.frame(with(df_ord[df_ord$Group==g,],
+      vegan:::veganCovEllipse(rslt[[g]]$cov,rslt[[g]]$center, rslt[[g]]$scale))),Group=g))
+    }
+    colnames(df_ellipse) <- c("x", "y", "Group")
+    df_ellipse <- df_ellipse[ , c(3,1,2)]
+    
+    plots_NMDS_fluvial[[groups]] <- ggplot(dataset, aes(x=x,y=y))+
       geom_vline(xintercept = 0)+geom_hline(yintercept = 0)+
-      geom_jitter(shape=21, size=5)+
+      geom_jitter(shape=21, size=5, alpha=0.8, aes(fill=centr_iso))+
+      geom_path(data = df_ellipse, aes(x=x, y=y, colour=Group), size=2, show.legend = FALSE)+
+      scale_colour_manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
       scale_fill_continuous(type = "viridis")+
       labs(title = biod_names[groups], 
-           subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+           subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
       xlab("NMDS1")+ylab("NMDS2")+
       theme_classic()+
-      theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
+      theme(legend.position = "none",
+            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
+    
+    sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+    pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
+                          mu   = pred_x$fit,
+                          low  = pred_x$fit - 1.96 * pred_x$se.fit,
+                          high = pred_x$fit + 1.96 * pred_x$se.fit)
+    if(sign_x<0.05){
+      plots_NMDS_x_fluvial[[groups]] <-ggplot(my_data, aes(x = X2, y = X1)) +
+        geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
+        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
+        scale_fill_continuous(type = "viridis")+
+        labs(title = biod_names[groups], 
+             subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+        xlab("Centrality-Isolation")+ylab("NMDS1")+
+        theme_classic()+
+        theme(legend.position = "none",
+              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
+    }else{
+      plots_NMDS_x_fluvial[[groups]] <- ggplot(my_data, aes(x = X2, y = X1)) +
+        geom_jitter(alpha=0.5,shape=21, size=5, aes(fill=X2))+
+        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=1, linetype=2,se = F)+
+        scale_fill_continuous(type = "viridis")+
+        labs(title = biod_names[groups], 
+             subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+        xlab("Centrality-Isolation")+ylab("NMDS1")+
+        theme_classic()+
+        theme(legend.position = "none",
+              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+    }
+    
+    sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+    pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
+                          mu   = pred_y$fit,
+                          low  = pred_y$fit - 1.96 * pred_y$se.fit,
+                          high = pred_y$fit + 1.96 * pred_y$se.fit)
+    if(sign_y<0.05){
+      plots_NMDS_y_fluvial[[groups]] <- ggplot(my_data, aes(x = X2, y = X1)) +
+        geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
+        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
+        scale_fill_continuous(type = "viridis")+
+        labs(title = biod_names[groups], 
+             subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+        xlab("Centrality-Isolation")+ylab("NMDS2")+
+        theme_classic()+
+        theme(legend.position = "none",
+              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+    }else{
+      plots_NMDS_y_fluvial[[groups]] <- ggplot(my_data, aes(x = X2, y = X1)) +
+        geom_jitter(alpha=0.5,shape=21, size=5, aes(fill=X2))+
+        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=1, linetype=2,se = F)+
+        scale_fill_continuous(type = "viridis")+
+        labs(title = biod_names[groups], 
+             subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+        xlab("Centrality-Isolation")+ylab("NMDS2")+
+        theme_classic()+
+        theme(legend.position = "none",
+              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+    }
+  plots_NMDS_total_fluvial[[groups]] <- plots_NMDS_fluvial
+  plots_NMDS_total_x_fluvial[[groups]] <- plots_NMDS_x_fluvial 
+  plots_NMDS_total_y_fluvial[[groups]] <- plots_NMDS_y_fluvial 
+  }
 
-}
-
-
+# Print NMDS
 png(filename ="C:/Users/Cunilleramontcusi/NMDS_Diverse.png",
-    width =629*10, height =629*10 ,units ="px",res = 300)
+    width =729*10, height =629*10 ,units ="px",res = 300)
 grid.arrange(plots_NMDS_total[[1]][[1]],plots_NMDS_total[[1]][[2]],plots_NMDS_total[[1]][[3]],
-             plots_NMDS_total[[1]][[4]],plots_NMDS_total[[1]][[5]],
-             
+             plots_NMDS_total[[1]][[4]],plots_NMDS_total[[1]][[5]],plots_NMDS_total_fluvial[[1]][[1]],
+
              plots_NMDS_total[[2]][[1]],plots_NMDS_total[[2]][[2]],plots_NMDS_total[[2]][[3]],
-             plots_NMDS_total[[2]][[4]],plots_NMDS_total[[2]][[5]],
+             plots_NMDS_total[[2]][[4]],plots_NMDS_total[[2]][[5]],plots_NMDS_total_fluvial[[2]][[2]],
              
              plots_NMDS_total[[3]][[1]],plots_NMDS_total[[3]][[2]],plots_NMDS_total[[3]][[3]],
-             plots_NMDS_total[[3]][[4]],plots_NMDS_total[[3]][[5]],
+             plots_NMDS_total[[3]][[4]],plots_NMDS_total[[3]][[5]],plots_NMDS_total_fluvial[[3]][[3]],
              
              plots_NMDS_total[[4]][[1]],plots_NMDS_total[[4]][[2]],plots_NMDS_total[[4]][[3]],
-             plots_NMDS_total[[4]][[4]],plots_NMDS_total[[4]][[5]],
+             plots_NMDS_total[[4]][[4]],plots_NMDS_total[[4]][[5]],plots_NMDS_total_fluvial[[4]][[4]],
              
              plots_NMDS_total[[5]][[1]],plots_NMDS_total[[5]][[2]],plots_NMDS_total[[5]][[3]],
-             plots_NMDS_total[[5]][[4]],plots_NMDS_total[[5]][[5]],
+             plots_NMDS_total[[5]][[4]],plots_NMDS_total[[5]][[5]],plots_NMDS_total_fluvial[[5]][[5]],
              
-             ncol=5,nrow=5, top="NMDS groups")
+             ncol=6,nrow=5, top="NMDS groups")
 dev.off()
 
+# Print NMDS x
 png(filename ="C:/Users/Cunilleramontcusi/X_NMDS_Diverse.png",
-    width =629*10, height =629*10 ,units ="px",res = 300)
+    width =729*10, height =629*10 ,units ="px",res = 300)
 grid.arrange(plots_NMDS_total_x[[1]][[1]],plots_NMDS_total_x[[1]][[2]],plots_NMDS_total_x[[1]][[3]],
-             plots_NMDS_total_x[[1]][[4]],plots_NMDS_total_x[[1]][[5]],
+             plots_NMDS_total_x[[1]][[4]],plots_NMDS_total_x[[1]][[5]],plots_NMDS_total_x_fluvial[[1]][[1]],
              
              plots_NMDS_total_x[[2]][[1]],plots_NMDS_total_x[[2]][[2]],plots_NMDS_total_x[[2]][[3]],
-             plots_NMDS_total_x[[2]][[4]],plots_NMDS_total_x[[2]][[5]],
+             plots_NMDS_total_x[[2]][[4]],plots_NMDS_total_x[[2]][[5]],plots_NMDS_total_x_fluvial[[2]][[2]],
              
              plots_NMDS_total_x[[3]][[1]],plots_NMDS_total_x[[3]][[2]],plots_NMDS_total_x[[3]][[3]],
-             plots_NMDS_total_x[[3]][[4]],plots_NMDS_total_x[[3]][[5]],
+             plots_NMDS_total_x[[3]][[4]],plots_NMDS_total_x[[3]][[5]],plots_NMDS_total_x_fluvial[[3]][[3]],
              
              plots_NMDS_total_x[[4]][[1]],plots_NMDS_total_x[[4]][[2]],plots_NMDS_total_x[[4]][[3]],
-             plots_NMDS_total_x[[4]][[4]],plots_NMDS_total_x[[4]][[5]],
+             plots_NMDS_total_x[[4]][[4]],plots_NMDS_total_x[[4]][[5]],plots_NMDS_total_x_fluvial[[4]][[4]],
              
              plots_NMDS_total_x[[5]][[1]],plots_NMDS_total_x[[5]][[2]],plots_NMDS_total_x[[5]][[3]],
-             plots_NMDS_total_x[[5]][[4]],plots_NMDS_total_x[[5]][[5]],
+             plots_NMDS_total_x[[5]][[4]],plots_NMDS_total_x[[5]][[5]],plots_NMDS_total_x_fluvial[[5]][[5]],
              
-             ncol=5,nrow=5, top="NMDS groups")
+             ncol=6,nrow=5, top="NMDS groups")
 dev.off()
 
+# Print NMDS y
 png(filename ="C:/Users/Cunilleramontcusi/Y_NMDS_Diverse.png",
-    width =629*10, height =629*10 ,units ="px",res = 300)
+    width =729*10, height =629*10 ,units ="px",res = 300)
 grid.arrange(plots_NMDS_total_y[[1]][[1]],plots_NMDS_total_y[[1]][[2]],plots_NMDS_total_y[[1]][[3]],
-             plots_NMDS_total_y[[1]][[4]],plots_NMDS_total_y[[1]][[5]],
+             plots_NMDS_total_y[[1]][[4]],plots_NMDS_total_y[[1]][[5]],plots_NMDS_total_y_fluvial[[1]][[1]],
              
              plots_NMDS_total_y[[2]][[1]],plots_NMDS_total_y[[2]][[2]],plots_NMDS_total_y[[2]][[3]],
-             plots_NMDS_total_y[[2]][[4]],plots_NMDS_total_y[[2]][[5]],
+             plots_NMDS_total_y[[2]][[4]],plots_NMDS_total_y[[2]][[5]],plots_NMDS_total_y_fluvial[[2]][[2]],
              
              plots_NMDS_total_y[[3]][[1]],plots_NMDS_total_y[[3]][[2]],plots_NMDS_total_y[[3]][[3]],
-             plots_NMDS_total_y[[3]][[4]],plots_NMDS_total_y[[3]][[5]],
+             plots_NMDS_total_y[[3]][[4]],plots_NMDS_total_y[[3]][[5]],plots_NMDS_total_y_fluvial[[3]][[3]],
              
              plots_NMDS_total_y[[4]][[1]],plots_NMDS_total_y[[4]][[2]],plots_NMDS_total_y[[4]][[3]],
-             plots_NMDS_total_y[[4]][[4]],plots_NMDS_total_y[[4]][[5]],
+             plots_NMDS_total_y[[4]][[4]],plots_NMDS_total_y[[4]][[5]],plots_NMDS_total_y_fluvial[[4]][[4]],
              
              plots_NMDS_total_y[[5]][[1]],plots_NMDS_total_y[[5]][[2]],plots_NMDS_total_y[[5]][[3]],
-             plots_NMDS_total_y[[5]][[4]],plots_NMDS_total_y[[5]][[5]],
+             plots_NMDS_total_y[[5]][[4]],plots_NMDS_total_y[[5]][[5]],plots_NMDS_total_y_fluvial[[5]][[5]],
              
-             ncol=5,nrow=5, top="NMDS groups")
+             ncol=6,nrow=5, top="NMDS groups")
+dev.off()
+
+# NMDS significant plots______________________________________ ####
+biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
+net_names <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
+color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+
+# For Euclidean network
+plots_NMDS_x_sign <- list()
+plots_NMDS_total_x_sign <- list()
+
+plots_NMDS_y_sign <- list()
+plots_NMDS_total_y_sign <- list()
+
+ref_value_X <- 0
+ref_value_Y <- 0
+
+for (groups in 1:5) {
+  for (net in 1:5) {
+    coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
+    centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
+    
+    spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
+    spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+    
+    x <- spe.abu.MDS$points[,1]
+    y <- spe.abu.MDS$points[,2]
+    
+    dataset <- data.frame(x,y,centr_iso)
+
+sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
+                      mu   = pred_x$fit,
+                      low  = pred_x$fit - 1.96 * pred_x$se.fit,
+                      high = pred_x$fit + 1.96 * pred_x$se.fit)
+if(sign_x<0.05){
+  
+  ref_value_X <- ref_value_X+1
+  
+  plots_NMDS_x_sign[[ref_value_X]]<-ggplot(my_data, aes(x = X2, y = X1)) +
+    geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
+    geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
+    scale_fill_continuous(type = "viridis")+
+    labs(title = biod_names[groups], 
+         subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+    xlab("Centrality-Isolation")+ylab("NMDS1")+
+    theme_classic()+
+    theme(legend.position = "none",
+          panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
+}
+
+sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
+                      mu   = pred_y$fit,
+                      low  = pred_y$fit - 1.96 * pred_y$se.fit,
+                      high = pred_y$fit + 1.96 * pred_y$se.fit)
+if(sign_y<0.05){
+  
+  ref_value_Y <- ref_value_Y+1
+  
+  plots_NMDS_y_sign[[ref_value_Y]] <- ggplot(my_data, aes(x = X2, y = X1)) +
+    geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
+    geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
+    scale_fill_continuous(type = "viridis")+
+    labs(title = biod_names[groups], 
+         subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+    xlab("Centrality-Isolation")+ylab("NMDS2")+
+    theme_classic()+
+    theme(legend.position = "none",
+          panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+  }
+}
+plots_NMDS_total_x_sign[[groups]] <- plots_NMDS_x_sign
+plots_NMDS_total_y_sign[[groups]] <- plots_NMDS_y_sign
+}
+
+# For Fluvial network
+plots_NMDS_x_fluvial_sign <- list()
+plots_NMDS_total_x_fluvial_sign <- list()
+
+plots_NMDS_y_fluvial_sign <- list()
+plots_NMDS_total_y_fluvial_sign <- list()
+
+ref_value_X <- 0
+ref_value_Y <- 0
+
+for (groups in 1:5) {
+  coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
+  centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
+  
+  spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
+  spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+  
+  x <- spe.abu.MDS$points[,1]
+  y <- spe.abu.MDS$points[,2]
+  
+  dataset <- data.frame(x,y,centr_iso)
+ 
+  sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+  pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
+                        mu   = pred_x$fit,
+                        low  = pred_x$fit - 1.96 * pred_x$se.fit,
+                        high = pred_x$fit + 1.96 * pred_x$se.fit)
+  if(sign_x<0.05){
+    
+    ref_value_X <- ref_value_X+1
+    
+    plots_NMDS_x_fluvial_sign[[ref_value_X]] <-ggplot(my_data, aes(x = X2, y = X1)) +
+      geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
+      geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
+      scale_fill_continuous(type = "viridis")+
+      labs(title = biod_names[groups], 
+           subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+      xlab("Centrality-Isolation")+ylab("NMDS1")+
+      theme_classic()+
+      theme(legend.position = "none",
+            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
+  }
+  
+  sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
+  pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
+                        mu   = pred_y$fit,
+                        low  = pred_y$fit - 1.96 * pred_y$se.fit,
+                        high = pred_y$fit + 1.96 * pred_y$se.fit)
+  if(sign_y<0.05){
+    
+    ref_value_Y <- ref_value_Y+1
+    
+    plots_NMDS_y_fluvial_sign[[ref_value_Y]] <- ggplot(my_data, aes(x = X2, y = X1)) +
+      geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
+      geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
+      scale_fill_continuous(type = "viridis")+
+      labs(title = biod_names[groups], 
+           subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+      xlab("Centrality-Isolation")+ylab("NMDS2")+
+      theme_classic()+
+      theme(legend.position = "none",
+            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+  }
+  plots_NMDS_total_x_fluvial_sign[[groups]] <- plots_NMDS_x_fluvial_sign 
+  plots_NMDS_total_y_fluvial_sign[[groups]] <- plots_NMDS_y_fluvial_sign
+}
+
+# Plot extraction
+plot_plot_sign_plot_NMDS_x <- list()
+for(t in 1:length(plots_NMDS_total_x_sign[[5]])){
+  plot_plot_sign_plot_NMDS_x[[t]] <- plots_NMDS_total_x_sign[[5]][[t]]
+}
+for(d in c(length(plots_NMDS_total_x_sign[[5]])+1):c(length(plots_NMDS_total_x_sign[[5]])+length(plots_NMDS_total_x_fluvial_sign[[5]]))){
+  plot_plot_sign_plot_NMDS_x[[d]] <- plots_NMDS_total_x_fluvial_sign[[5]][[d-length(plots_NMDS_total_x_sign[[5]])]]
+}
+
+plot_plot_sign_plot_NMDS_y <- list()
+for(t in 1:length(plots_NMDS_total_y_sign[[5]])){
+  plot_plot_sign_plot_NMDS_y[[t]] <- plots_NMDS_total_y_sign[[5]][[t]]
+}
+for(d in c(length(plots_NMDS_total_y_sign[[5]])+1):c(length(plots_NMDS_total_y_sign[[5]])+length(plots_NMDS_total_y_fluvial_sign[[5]]))){
+  plot_plot_sign_plot_NMDS_y[[d]] <- plots_NMDS_total_y_fluvial_sign[[5]][[d-length(plots_NMDS_total_y_sign[[5]])]]
+}
+
+# Print together
+png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_NMDS.png",
+    width =629*6 ,height =629*6 ,units ="px",res = 300)
+grid.arrange(plot_plot_sign_plot_NMDS_x[[1]],plot_plot_sign_plot_NMDS_x[[2]],plot_plot_sign_plot_NMDS_x[[3]],
+             plot_plot_sign_plot_NMDS_x[[4]],plot_plot_sign_plot_NMDS_x[[5]],plot_plot_sign_plot_NMDS_x[[6]],
+             plot_plot_sign_plot_NMDS_x[[7]],plot_plot_sign_plot_NMDS_x[[8]],
+             plot_plot_sign_plot_NMDS_y[[1]],plot_plot_sign_plot_NMDS_y[[2]],plot_plot_sign_plot_NMDS_y[[3]],
+             plot_plot_sign_plot_NMDS_y[[4]],plot_plot_sign_plot_NMDS_y[[5]],
+             ncol=3,nrow=5, top="Sign_Ttla")
 dev.off()
 
 
-
-##########################################
-##########################################
-##########                      ##########
 ##########        END           ##########
 ##########                      ##########
 ##########################################
 ##########################################
-    
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+
+# Old versions
+
 # Linear models __________________________________________________________________ ####
     
     model_resutls_total <- list()

@@ -106,6 +106,13 @@ seltax<-which(apply(com.18S.zoo,2,sum)>3)
 com.18S.zoo<-com.18S.zoo[,seltax]
 
 #_______________________________________________________________###
+# For the CCA with abundance values we keep the abundances of the available groups
+#### WARNING: ONLY FOR THE CCA!
+list.names <- c("S16", "S18", "phyto", "zoo", "18S.zoo")
+comm_data_QUANTIT<- list(com.16S, com.18S, com.phy, com.zoo, com.18S.zoo)
+names(comm_data_QUANTIT) <-list.names 
+
+#_______________________________________________________________###
 # IF you want a check with PA DATA run the following: 
 #### WARNING: Change dissimilarity to jaccard if you are doing it!
 com.16S <- ifelse(com.16S>0,1,0)
@@ -802,7 +809,7 @@ for (e in 1:length(cordenades_xarxes)) {
                            aes(x = x, y = y, xend = xend, yend = yend))+
     geom_edges( color = "grey40", size=0.1, alpha=0.4) +
     geom_nodes(aes(fill=CC_values,alpha=family, size=family),color ="grey20" ,shape=21, alpha=.75)+
-    scale_fill_viridis(discrete = F,direction = -1)+
+    scale_fill_viridis(discrete = F,alpha = 1,begin = 1,end = 0)+
     labs(x="",y="")+
     scale_alpha_manual(values = c(0.2,5))+
     scale_size_manual(values = c(1,3))+
@@ -866,13 +873,15 @@ community_indices<- list()
 # CCA
 tst_coeficient_out <- list()
 for (r in 1:5) {
+  require(pscl)
   cca1<-cca(comm_data[[r]]~as.matrix(env_data[[r]][,4:8]))
   fitteds <- fitted(cca1, model="CCA", type= "response")
   coeffici <- c()
   for (e in 1:nrow(comm_data[[r]])) {
-    coeffici[e] <- cor(fitteds[e,],as.numeric(comm_data[[r]][e,]),method = "pearson")
+    model <- glm(as.numeric(comm_data[[r]][e,])~fitteds[e,],family = "binomial")
+    coeffici[e] <- pR2(model)["McFadden"]
   }
-  coeffici <- ifelse(coeffici<0,0,coeffici)
+  #coeffici <- ifelse(coeffici<0,0,coeffici)
   tst_coeficient_out[[r]] <- coeffici
 }
 
@@ -984,30 +993,30 @@ for (groups in 1:5) {
     
     p.val <- c()
     #CCA
-    p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #Richness
-    p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #LCBD
-    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #Turn
-    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #RichDiff
-    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     
     GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
     
@@ -1022,7 +1031,7 @@ for (groups in 1:5) {
           geom_jitter(alpha=0.2, shape=21, size=3, colour="black", aes(fill=X2))+
           scale_fill_continuous(type = "viridis")+
           geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
-          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+xlab("Centrality-Isolation")+
           theme_classic()+
           theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
                 legend.position = "none") 
@@ -1035,7 +1044,7 @@ for (groups in 1:5) {
           geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
           scale_fill_continuous(type = "viridis")+
           geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
-          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+          labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+xlab("Centrality-Isolation")+
           theme_classic()+
           theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
                 legend.position = "none")  
@@ -1073,30 +1082,30 @@ for (groups in 1:5) {
   
   p.val <- c()
   #CCA
-  p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #Richness
-  p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #LCBD
-  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #Turn
-  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #RichDiff
-  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   
   GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
   
@@ -1111,7 +1120,7 @@ for (groups in 1:5) {
         geom_jitter(alpha=0.2, shape=21, size=3, colour="black", aes(fill=X2))+
         scale_fill_continuous(type = "viridis")+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
-        labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+        labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+xlab("Centrality-Isolation")+
         theme_classic()+
         theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
               legend.position = "none")  
@@ -1124,7 +1133,7 @@ for (groups in 1:5) {
         geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
         scale_fill_continuous(type = "viridis")+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
-        labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+
+        labs(title=colnames(dataset)[var+1])+ylab(colnames(dataset)[var+1])+xlab("Centrality-Isolation")+
         theme_classic()+
         theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
               legend.position = "none")  
@@ -1142,6 +1151,7 @@ for (groups in 1:5) {
                ncol=2,nrow=3, top="Fluvial network")
   dev.off()
 }
+
 
 
 # GAM models result in table format - Supplementary like_####
@@ -1180,6 +1190,7 @@ for (groups in 1:5) {
   table_groups[[groups]] <- as.data.frame(a)
   write.table(table_groups[[groups]], file = paste(biod_names[groups],"GAM_Results",".txt",sep = ""), sep = ",", quote = FALSE, row.names = F)
 }
+
 
 
 # Summary plot GAM models______________________________________ ####
@@ -1282,6 +1293,7 @@ dev.off()
 
 
 
+
 # GAM plot significant______________________________________ ####
 # For Euclidean network
 GAM_Sign_plots_total <- list()
@@ -1297,20 +1309,20 @@ for (groups in 1:5) {
     
     p.val <- c()
     #CCA
-    p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #Richness
-    p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #LCBD
-    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #Turn
-    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #RichDiff
-    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     
     GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
     
@@ -1329,7 +1341,7 @@ for (groups in 1:5) {
           scale_fill_continuous(type = "viridis")+
           geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
           labs(title=paste(Names_Networks[[net]],colnames(dataset)[select_p.val[var]+1]))+
-          ylab(colnames(dataset)[var+1])+
+          ylab(colnames(dataset)[var+1])+xlab("Centrality-Isolation")+
           theme_classic()+
           theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
                 legend.position = "none")  
@@ -1351,20 +1363,20 @@ for (groups in 1:5) {
   p.val <- c()
   
   #CCA
-  p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #Richness
-  p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #LCBD
-  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #Turn
-  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #RichDiff
-  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   
   GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
   
@@ -1384,7 +1396,7 @@ for (groups in 1:5) {
         scale_fill_continuous(type = "viridis")+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
         labs(title=paste("Fluvial",colnames(dataset)[select_p.val[var]+1]))+
-        ylab(colnames(dataset)[select_p.val[var]+1])+
+        ylab(colnames(dataset)[select_p.val[var]+1])+xlab("Centrality-Isolation")+
         theme_classic()+
         theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
               legend.position = "none")  
@@ -1404,24 +1416,22 @@ for(d in c(length(GAM_Sign_plots_total)+1):c(length(GAM_Sign_plots_total)+length
 
 # Printing for Env_Tracking
 png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_EnvTrack.png",
-    width =582*4 ,height =629*4 ,units ="px",res = 300)
-grid.arrange(plot_plot_sign_plot[[1]],plot_plot_sign_plot[[2]],plot_plot_sign_plot[[4]],
-             plot_plot_sign_plot[[11]],plot_plot_sign_plot[[21]],plot_plot_sign_plot[[25]],
-             ncol=2,nrow=3, top="Sign_Ttla")
+    width =582*4 ,height =629*2 ,units ="px",res = 300)
+grid.arrange(plot_plot_sign_plot[[1]],plot_plot_sign_plot[[2]],
+             ncol=2,nrow=1, top="Assembly (Environmental Tracking)")
 dev.off()
 
 # Printing for Diverse
 png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_Diverse.png",
     width =629*6 ,height =629*6 ,units ="px",res = 300)
 grid.arrange(plot_plot_sign_plot[[3]],plot_plot_sign_plot[[5]], plot_plot_sign_plot[[6]],
-             plot_plot_sign_plot[[7]],plot_plot_sign_plot[[8]],plot_plot_sign_plot[[9]],
+             plot_plot_sign_plot[[7]],plot_plot_sign_plot[[8]],plot_plot_sign_plot[[9]],plot_plot_sign_plot[[19]],
              plot_plot_sign_plot[[10]],plot_plot_sign_plot[[12]],
              plot_plot_sign_plot[[13]],plot_plot_sign_plot[[14]],plot_plot_sign_plot[[15]],
              plot_plot_sign_plot[[16]],plot_plot_sign_plot[[17]],plot_plot_sign_plot[[18]],
-             plot_plot_sign_plot[[19]],plot_plot_sign_plot[[20]],plot_plot_sign_plot[[22]],
-             plot_plot_sign_plot[[23]],plot_plot_sign_plot[[24]],plot_plot_sign_plot[[26]],
-             ncol=4,nrow=5, top="Sign_Ttla")
+             ncol=4,nrow=4, top="Diversity")
 dev.off()
+
 
 
 # NMDS plots______________________________________ ####
@@ -1433,15 +1443,8 @@ color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
 plots_NMDS <- list()
 plots_NMDS_total <- list()
 
-plots_NMDS_x <- list()
-plots_NMDS_total_x <- list()
-plots_NMDS_total_x_model <- list()
-plots_NMDS_total_x_model_total <- list()
-
-plots_NMDS_y <- list()
-plots_NMDS_total_y <- list()
-plots_NMDS_total_y_model <- list()
-plots_NMDS_total_y_model_total <- list()
+plots_NMDS_model_result <- list()
+plots_NMDS_total_model_result <- list()
 
 for (groups in 1:5) {
   for (net in 1:5) {
@@ -1455,156 +1458,46 @@ x <- spe.abu.MDS$points[,1]
 y <- spe.abu.MDS$points[,2]
 
 dataset <- data.frame(x,y,centr_iso)
-    # Create categorical varaible according to centrality values - four levels
-    centr_iso_fact <- cut(dataset$centr_iso, breaks = 4,labels=c("A","B","C","D"))
-    dataset[,4] <- centr_iso_fact
-    
-    # Ordiplots in ggplot from: https://rdrr.io/github/jfq3/ggordiplots/src/R/gg_ordiplot.R
-    #' Make Ordination Axis Labels
-    #' Makes ordination axis labels that include, if apprpriate, the \% total variance explained by each axis.
-    ord_labels <-function(ord){
-  ev <- vegan::eigenvals(ord)
-  if (!is.na(ev)[1]) {
-    tol <- -(1e-07)*ev[1]
-    ord.labels <- rep("", length(ev))
-    if ((any(is.na(ev))) | (any(ev < tol))) {
-      for ( i in 1:length(ev)) {
-        ord.labels[i] <- paste("DIM", i, sep = "")
-      }
-    }
-    else {
-      ev.pc <- round(100*(ev/sum(ev)), 2)
-      axis.names <- names(ev)
-      if (is.null(axis.names)) {
-        for ( i in 1:length(ev.pc)) {
-          ord.labels[i] <- paste("DIM", i, " ", sprintf(ev.pc[i], fmt = '%#.1f'), "%", sep="")
-        }
-      } else {
-        for (i in 1:length(ev.pc)){
-          ord.labels[i] <- paste(axis.names[i], " ", ev.pc[i],"%", sep="")
-        }
-      }
-    }
-  } else {
-    ord.labels <- colnames(vegan::scores(ord))
-  }
-  
-  return(ord.labels)
+NMDS_model <- ordisurf(spe.abu.MDS ~ dataset[,3], plot = F,)
+NMDS_model_results <- summary(NMDS_model)
+
+plots_NMDS_model_result[[net]] <- NMDS_model_results
+
+extract.xyz <- function(obj) {
+  xy <- expand.grid(x = obj$grid$x, y = obj$grid$y)
+  xyz <- cbind(xy, c(obj$grid$z))
+  names(xyz) <- c("x", "y", "z")
+  return(xyz)
 }
-    
-    # Get site coordinates to plot.
-    df_ord <- vegan::scores(spe.abu.MDS, display = "sites", scaling=1, choices=c(1,2))
-    axis.labels <- ord_labels(spe.abu.MDS)[c(1,2)]
-    df_ord <- data.frame(x=df_ord[,1], y=df_ord[,2], Group= dataset[,4])
-    # Get parameters from the ordiellipse function.
-    rslt <- vegan::ordiellipse(spe.abu.MDS, groups=dataset[,4], display = "sites", 
-                               scaling=1, choices=c(1,2), kind = "sd", show.groups = as.vector(levels(dataset[,4])), draw = "none", label = F)
-    # Get points to plot for the ellipses.
-    df_ellipse <- data.frame()
-    for(g in as.vector(levels(dataset[,4]))) {
-      df_ellipse <- rbind(df_ellipse, 
-                          cbind(as.data.frame(with(df_ord[df_ord$Group==g,],
-                                                   vegan:::veganCovEllipse(rslt[[g]]$cov,rslt[[g]]$center, rslt[[g]]$scale))),Group=g))
-    }
-    colnames(df_ellipse) <- c("x", "y", "Group")
-    df_ellipse <- df_ellipse[ , c(3,1,2)]
+contour.vals <- extract.xyz(obj = NMDS_model)
 
     plots_NMDS[[net]] <- ggplot(dataset, aes(x=x,y=y))+
                   geom_vline(xintercept = 0)+geom_hline(yintercept = 0)+
                   geom_jitter(shape=21, size=5, alpha=0.8, aes(fill=centr_iso))+
-                  geom_path(data = df_ellipse, aes(x=x, y=y, colour=Group), size=2, show.legend = FALSE)+
-                  scale_colour_manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
-                  scale_fill_continuous(type = "viridis")+
-                  labs(title = biod_names[groups], 
-                       subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+                  geom_contour(data=contour.vals, aes(x, y, z = z, colour = ..level..))+
+                  #geom_path(data = df_ellipse, aes(x=x, y=y, colour=Group), size=2, show.legend = FALSE)+
+                  scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
+                  #manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
+                  scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
+                  labs(title = paste(biod_names[groups], net_names[net]),
+                       subtitle = paste("Stress=",round(spe.abu.MDS$stress,2), 
+                                        #"Rsqr=", round(NMDS_model_results$r.sq,2),
+                                        "Expl. Dev.=",round(NMDS_model_results$dev.expl,2)))+
                   xlab("NMDS1")+ylab("NMDS2")+
                   theme_classic()+
                   theme(legend.position = "none",
                         panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
-
-    sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-    plots_NMDS_total_x_model[[net]] <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))
-    pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
-    my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
-                        mu   = pred_x$fit,
-                        low  = pred_x$fit - 1.96 * pred_x$se.fit,
-                        high = pred_x$fit + 1.96 * pred_x$se.fit)
-  if(sign_x<0.05){
-   plots_NMDS_x[[net]] <-ggplot(my_data, aes(x = X2, y = X1)) +
-                  geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
-                  geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
-                  scale_fill_continuous(type = "viridis")+
-                  labs(title = biod_names[groups], 
-                       subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-                  xlab("Centrality-Isolation")+ylab("NMDS1")+
-                  theme_classic()+
-                  theme(legend.position = "none",
-                        panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
-  }else{
-    plots_NMDS_x[[net]] <- ggplot(my_data, aes(x = X2, y = X1)) +
-      geom_jitter(alpha=0.5,shape=21, size=5, aes(fill=X2))+
-      geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=1, linetype=2,se = F)+
-      scale_fill_continuous(type = "viridis")+
-      labs(title = biod_names[groups], 
-           subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-      xlab("Centrality-Isolation")+ylab("NMDS1")+
-      theme_classic()+
-      theme(legend.position = "none",
-            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
-  }
-
-  sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-  plots_NMDS_total_y_model[[net]] <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))
-  pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
-  my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
-                        mu   = pred_y$fit,
-                        low  = pred_y$fit - 1.96 * pred_y$se.fit,
-                        high = pred_y$fit + 1.96 * pred_y$se.fit)
-    if(sign_y<0.05){
-    plots_NMDS_y[[net]] <- ggplot(my_data, aes(x = X2, y = X1)) +
-      geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
-      geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
-      scale_fill_continuous(type = "viridis")+
-      labs(title = biod_names[groups], 
-           subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-      xlab("Centrality-Isolation")+ylab("NMDS2")+
-      theme_classic()+
-      theme(legend.position = "none",
-            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
-  }else{
-    plots_NMDS_y[[net]] <- ggplot(my_data, aes(x = X2, y = X1)) +
-      geom_jitter(alpha=0.5,shape=21, size=5, aes(fill=X2))+
-      geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=1, linetype=2,se = F)+
-      scale_fill_continuous(type = "viridis")+
-      labs(title = biod_names[groups], 
-           subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-      xlab("Centrality-Isolation")+ylab("NMDS2")+
-      theme_classic()+
-      theme(legend.position = "none",
-            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
-    }
-
   }
   plots_NMDS_total[[groups]] <- plots_NMDS
-  plots_NMDS_total_x[[groups]] <- plots_NMDS_x 
-  plots_NMDS_total_y[[groups]] <- plots_NMDS_y
-  plots_NMDS_total_x_model_total[[groups]] <-plots_NMDS_total_x_model
-  plots_NMDS_total_y_model_total[[groups]] <- plots_NMDS_total_y_model
+  plots_NMDS_total_model_result[[groups]] <- plots_NMDS_model_result
 }
 
 # For Fluvial network
 plots_NMDS_fluvial<- list()
 plots_NMDS_total_fluvial <- list()
 
-plots_NMDS_x_fluvial <- list()
-plots_NMDS_total_x_fluvial <- list()
-plots_NMDS_total_x_model_fluvial<- list()
-plots_NMDS_total_x_model_fluvial_total<- list()
-
-plots_NMDS_y_fluvial <- list()
-plots_NMDS_total_y_fluvial <- list()
-plots_NMDS_total_y_model_fluvial<- list()
-plots_NMDS_total_y_model_fluvial_total<- list()
+plots_NMDS_fluvial_model_result <- list()
+plots_NMDS_fluvial_total_model_result <- list()
 
 for (groups in 1:5) {
     coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
@@ -1617,209 +1510,37 @@ for (groups in 1:5) {
     y <- spe.abu.MDS$points[,2]
     
     dataset <- data.frame(x,y,centr_iso)
-    # Create categorical varaible according to centrality values - four levels
-    centr_iso_fact <- cut(dataset$centr_iso, breaks = 4,labels=c("A","B","C","D"))
-    dataset[,4] <- centr_iso_fact
+    NMDS_model <- ordisurf(spe.abu.MDS ~ dataset[,3], plot = F)
+    NMDS_model_results <- summary(NMDS_model)
     
-# Ordiplots in ggplot from: https://rdrr.io/github/jfq3/ggordiplots/src/R/gg_ordiplot.R
-  #' Make Ordination Axis Labels
-  #' Makes ordination axis labels that include, if apprpriate, the \% total variance explained by each axis.
-    ord_labels <-function(ord){
-          ev <- vegan::eigenvals(ord)
-          if (!is.na(ev)[1]) {
-            tol <- -(1e-07)*ev[1]
-            ord.labels <- rep("", length(ev))
-            if ((any(is.na(ev))) | (any(ev < tol))) {
-              for ( i in 1:length(ev)) {
-                ord.labels[i] <- paste("DIM", i, sep = "")
-              }
-            }
-            else {
-              ev.pc <- round(100*(ev/sum(ev)), 2)
-              axis.names <- names(ev)
-              if (is.null(axis.names)) {
-                for ( i in 1:length(ev.pc)) {
-                  ord.labels[i] <- paste("DIM", i, " ", sprintf(ev.pc[i], fmt = '%#.1f'), "%", sep="")
-                }
-              } else {
-                for (i in 1:length(ev.pc)){
-                  ord.labels[i] <- paste(axis.names[i], " ", ev.pc[i],"%", sep="")
-                }
-              }
-            }
-          } else {
-            ord.labels <- colnames(vegan::scores(ord))
-          }
-          
-          return(ord.labels)
-    }
+    plots_NMDS_fluvial_model_result[[groups]] <- NMDS_model_results
     
-    # Get site coordinates to plot.
-    df_ord <- vegan::scores(spe.abu.MDS, display = "sites", scaling=1, choices=c(1,2))
-    axis.labels <- ord_labels(spe.abu.MDS)[c(1,2)]
-    df_ord <- data.frame(x=df_ord[,1], y=df_ord[,2], Group= dataset[,4])
-    # Get parameters from the ordiellipse function.
-    rslt <- vegan::ordiellipse(spe.abu.MDS, groups=dataset[,4], display = "sites", 
-    scaling=1, choices=c(1,2), kind = "sd", show.groups = as.vector(levels(dataset[,4])), draw = "none", label = F)
-    # Get points to plot for the ellipses.
-    df_ellipse <- data.frame()
-    for(g in as.vector(levels(dataset[,4]))) {
-      df_ellipse <- rbind(df_ellipse, 
-      cbind(as.data.frame(with(df_ord[df_ord$Group==g,],
-      vegan:::veganCovEllipse(rslt[[g]]$cov,rslt[[g]]$center, rslt[[g]]$scale))),Group=g))
+    extract.xyz <- function(obj) {
+      xy <- expand.grid(x = obj$grid$x, y = obj$grid$y)
+      xyz <- cbind(xy, c(obj$grid$z))
+      names(xyz) <- c("x", "y", "z")
+      return(xyz)
     }
-    colnames(df_ellipse) <- c("x", "y", "Group")
-    df_ellipse <- df_ellipse[ , c(3,1,2)]
+    contour.vals <- extract.xyz(obj = NMDS_model)
     
     plots_NMDS_fluvial[[groups]] <- ggplot(dataset, aes(x=x,y=y))+
       geom_vline(xintercept = 0)+geom_hline(yintercept = 0)+
       geom_jitter(shape=21, size=5, alpha=0.8, aes(fill=centr_iso))+
-      geom_path(data = df_ellipse, aes(x=x, y=y, colour=Group), size=2, show.legend = FALSE)+
-      scale_colour_manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
-      scale_fill_continuous(type = "viridis")+
-      labs(title = biod_names[groups], 
-           subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+      geom_contour(data=contour.vals, aes(x, y, z = z, colour = ..level..))+
+      scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
+      scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
+      labs(title = paste(biod_names[groups], net_names[net]),
+           subtitle = paste("Stress=",round(spe.abu.MDS$stress,2), 
+                            "Rsqr=", round(NMDS_model_results$r.sq,2),
+                            "Expl. Dev.=",round(NMDS_model_results$dev.expl,2)))+
       xlab("NMDS1")+ylab("NMDS2")+
       theme_classic()+
       theme(legend.position = "none",
             panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
     
-    sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-    plots_NMDS_total_x_model_fluvial[[groups]] <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))
-    pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
-    my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
-                          mu   = pred_x$fit,
-                          low  = pred_x$fit - 1.96 * pred_x$se.fit,
-                          high = pred_x$fit + 1.96 * pred_x$se.fit)
-    if(sign_x<0.05){
-      plots_NMDS_x_fluvial[[groups]] <-ggplot(my_data, aes(x = X2, y = X1)) +
-        geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
-        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
-        scale_fill_continuous(type = "viridis")+
-        labs(title = biod_names[groups], 
-             subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-        xlab("Centrality-Isolation")+ylab("NMDS1")+
-        theme_classic()+
-        theme(legend.position = "none",
-              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
-    }else{
-      plots_NMDS_x_fluvial[[groups]] <- ggplot(my_data, aes(x = X2, y = X1)) +
-        geom_jitter(alpha=0.5,shape=21, size=5, aes(fill=X2))+
-        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=1, linetype=2,se = F)+
-        scale_fill_continuous(type = "viridis")+
-        labs(title = biod_names[groups], 
-             subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-        xlab("Centrality-Isolation")+ylab("NMDS1")+
-        theme_classic()+
-        theme(legend.position = "none",
-              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
-    }
-    
-    sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-    plots_NMDS_total_y_model_fluvial[[groups]] <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))
-    pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
-    my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
-                          mu   = pred_y$fit,
-                          low  = pred_y$fit - 1.96 * pred_y$se.fit,
-                          high = pred_y$fit + 1.96 * pred_y$se.fit)
-    if(sign_y<0.05){
-      plots_NMDS_y_fluvial[[groups]] <- ggplot(my_data, aes(x = X2, y = X1)) +
-        geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
-        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
-        scale_fill_continuous(type = "viridis")+
-        labs(title = biod_names[groups], 
-             subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-        xlab("Centrality-Isolation")+ylab("NMDS2")+
-        theme_classic()+
-        theme(legend.position = "none",
-              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
-    }else{
-      plots_NMDS_y_fluvial[[groups]] <- ggplot(my_data, aes(x = X2, y = X1)) +
-        geom_jitter(alpha=0.5,shape=21, size=5, aes(fill=X2))+
-        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=1, linetype=2,se = F)+
-        scale_fill_continuous(type = "viridis")+
-        labs(title = biod_names[groups], 
-             subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-        xlab("Centrality-Isolation")+ylab("NMDS2")+
-        theme_classic()+
-        theme(legend.position = "none",
-              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
-    }
   plots_NMDS_total_fluvial[[groups]] <- plots_NMDS_fluvial
-  plots_NMDS_total_x_fluvial[[groups]] <- plots_NMDS_x_fluvial 
-  plots_NMDS_total_y_fluvial[[groups]] <- plots_NMDS_y_fluvial 
-  plots_NMDS_total_x_model_fluvial_total[[groups]] <- plots_NMDS_total_x_model_fluvial
-  plots_NMDS_total_y_model_fluvial_total[[groups]] <- plots_NMDS_total_y_model_fluvial
-  }
-
-
-# GAM NMDS models result in table format - Supplementary like_####
-biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
-Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
-
-# Add the fluvial as a sixth network
-for (t in 1:5) {
-  plots_NMDS_total_x_model_total[[t]][[6]] <- plots_NMDS_total_x_model_fluvial_total[[5]][[t]]
+  plots_NMDS_fluvial_total_model_result[[groups]] <- plots_NMDS_fluvial_model_result
 }
-
-# For the X axis
-table_groups <- list()
-for (groups in 1:5) {
-  a <- matrix(nrow =length(plots_NMDS_total_x_model_total[[groups]]),ncol = 10 )
-  row_reference <- 0
-  colnames(a) <- c("Network","Variable",
-                   "Intercept","Std.Err.","t-value","p-value","Smooth F-value","Smooth p-value","Adj R-sqr","Expl.Deviance")
-  for (net in 1:6) {
-      row_reference <- row_reference+1
-      
-      Netw_value <- Names_Networks[net]
-      Variable_value<- "NMDS X"
-      
-      a[row_reference,] <- c(Netw_value,Variable_value,
-                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$p.coeff,2),
-                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$se[1],2),
-                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$p.t,2),
-                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$p.pv,2),
-                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$chi.sq,2),
-                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$s.pv,2),
-                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$r.sq,2),
-                             round(plots_NMDS_total_x_model_total[[groups]][[net]]$dev.expl,2)) 
-  }
-  table_groups[[groups]] <- as.data.frame(a)
-  write.table(table_groups[[groups]], file = paste(biod_names[groups],"GAM_NMDS_x_Results",".txt",sep = ""), sep = ",", quote = FALSE, row.names = F)
-}
-
-# Add the fluvial as a sixth network
-for (t in 1:5) {
-  plots_NMDS_total_y_model_total[[t]][[6]] <- plots_NMDS_total_y_model_fluvial_total[[5]][[t]]
-}
-# For the Y axis
-table_groups <- list()
-for (groups in 1:5) {
-  a <- matrix(nrow =length(plots_NMDS_total_y_model_total[[groups]]),ncol = 10 )
-  row_reference <- 0
-  colnames(a) <- c("Network","Variable",
-                   "Intercept","Std.Err.","t-value","p-value","Smooth F-value","Smooth p-value","Adj R-sqr","Expl.Deviance")
-  for (net in 1:6) {
-    row_reference <- row_reference+1
-    
-    Netw_value <- Names_Networks[net]
-    Variable_value<- "NMDS y"
-    
-    a[row_reference,] <- c(Netw_value,Variable_value,
-                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$p.coeff,2),
-                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$se[1],2),
-                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$p.t,2),
-                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$p.pv,2),
-                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$chi.sq,2),
-                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$s.pv,2),
-                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$r.sq,2),
-                           round(plots_NMDS_total_y_model_total[[groups]][[net]]$dev.expl,2)) 
-  }
-  table_groups[[groups]] <- as.data.frame(a)
-  write.table(table_groups[[groups]], file = paste(biod_names[groups],"GAM_NMDS_y_Results",".txt",sep = ""), sep = ",", quote = FALSE, row.names = F)
-}
-
 
 
 # Print NMDS
@@ -1827,7 +1548,7 @@ png(filename ="C:/Users/Cunilleramontcusi/NMDS_Diverse.png",
     width =729*10, height =629*10 ,units ="px",res = 300)
 grid.arrange(plots_NMDS_total[[1]][[1]],plots_NMDS_total[[1]][[2]],plots_NMDS_total[[1]][[3]],
              plots_NMDS_total[[1]][[4]],plots_NMDS_total[[1]][[5]],plots_NMDS_total_fluvial[[1]][[1]],
-
+             
              plots_NMDS_total[[2]][[1]],plots_NMDS_total[[2]][[2]],plots_NMDS_total[[2]][[3]],
              plots_NMDS_total[[2]][[4]],plots_NMDS_total[[2]][[5]],plots_NMDS_total_fluvial[[2]][[2]],
              
@@ -1843,47 +1564,217 @@ grid.arrange(plots_NMDS_total[[1]][[1]],plots_NMDS_total[[1]][[2]],plots_NMDS_to
              ncol=6,nrow=5, top="NMDS groups")
 dev.off()
 
-# Print NMDS x
-png(filename ="C:/Users/Cunilleramontcusi/X_NMDS_Diverse.png",
-    width =729*10, height =629*10 ,units ="px",res = 300)
-grid.arrange(plots_NMDS_total_x[[1]][[1]],plots_NMDS_total_x[[1]][[2]],plots_NMDS_total_x[[1]][[3]],
-             plots_NMDS_total_x[[1]][[4]],plots_NMDS_total_x[[1]][[5]],plots_NMDS_total_x_fluvial[[1]][[1]],
-             
-             plots_NMDS_total_x[[2]][[1]],plots_NMDS_total_x[[2]][[2]],plots_NMDS_total_x[[2]][[3]],
-             plots_NMDS_total_x[[2]][[4]],plots_NMDS_total_x[[2]][[5]],plots_NMDS_total_x_fluvial[[2]][[2]],
-             
-             plots_NMDS_total_x[[3]][[1]],plots_NMDS_total_x[[3]][[2]],plots_NMDS_total_x[[3]][[3]],
-             plots_NMDS_total_x[[3]][[4]],plots_NMDS_total_x[[3]][[5]],plots_NMDS_total_x_fluvial[[3]][[3]],
-             
-             plots_NMDS_total_x[[4]][[1]],plots_NMDS_total_x[[4]][[2]],plots_NMDS_total_x[[4]][[3]],
-             plots_NMDS_total_x[[4]][[4]],plots_NMDS_total_x[[4]][[5]],plots_NMDS_total_x_fluvial[[4]][[4]],
-             
-             plots_NMDS_total_x[[5]][[1]],plots_NMDS_total_x[[5]][[2]],plots_NMDS_total_x[[5]][[3]],
-             plots_NMDS_total_x[[5]][[4]],plots_NMDS_total_x[[5]][[5]],plots_NMDS_total_x_fluvial[[5]][[5]],
-             
-             ncol=6,nrow=5, top="NMDS groups")
+
+# NMDS plots significant Ordisurfs______________________________________ ####
+
+# For Euclidean network
+plots_NMDS_sign <- list()
+
+ref_value <- 0
+
+for (groups in 1:5) {
+  for (net in 1:5) {
+    coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
+    centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
+    
+    spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
+    spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+    
+    x <- spe.abu.MDS$points[,1]
+    y <- spe.abu.MDS$points[,2]
+    
+    dataset <- data.frame(x,y,centr_iso)
+    NMDS_model <- ordisurf(spe.abu.MDS ~ dataset[,3], plot = F)
+    NMDS_model_results <- summary(NMDS_model)
+    
+    plots_NMDS_model_pval <- NMDS_model_results$s.pv
+    
+    if (plots_NMDS_model_pval<0.05) {
+      
+      ref_value <- ref_value+1
+      
+      extract.xyz <- function(obj) {
+      xy <- expand.grid(x = obj$grid$x, y = obj$grid$y)
+      xyz <- cbind(xy, c(obj$grid$z))
+      names(xyz) <- c("x", "y", "z")
+      return(xyz)
+    }
+    contour.vals <- extract.xyz(obj = NMDS_model)
+    
+    plots_NMDS_sign[[ref_value]] <- ggplot(dataset, aes(x=x,y=y))+
+      geom_vline(xintercept = 0)+geom_hline(yintercept = 0)+
+      geom_jitter(shape=21, size=5, alpha=0.8, aes(fill=centr_iso))+
+      geom_contour(data=contour.vals, aes(x, y, z = z, colour = ..level..))+
+      scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
+      scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
+      labs(title = paste(biod_names[groups], net_names[net]),
+           subtitle = paste("Stress=",round(spe.abu.MDS$stress,2), 
+                            "Rsqr=", round(NMDS_model_results$r.sq,2),
+                            "Expl. Dev.=",round(NMDS_model_results$dev.expl,2)))+
+      xlab("NMDS1")+ylab("NMDS2")+
+      theme_classic()+
+      theme(legend.position = "none",
+            panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+    }
+  }
+  plots_NMDS_sign
+}
+
+# For Fluvial network
+plots_NMDS_fluvial_sign<- list()
+
+ref_value <- 0
+
+for (groups in 1:5) {
+  coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
+  centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
+  
+  spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
+  spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+  
+  x <- spe.abu.MDS$points[,1]
+  y <- spe.abu.MDS$points[,2]
+  
+  dataset <- data.frame(x,y,centr_iso)
+  NMDS_model <- ordisurf(spe.abu.MDS ~ dataset[,3], plot = F)
+  NMDS_model_results <- summary(NMDS_model)
+  
+  plots_NMDS_model_pval <- NMDS_model_results$s.pv
+  
+  if (plots_NMDS_model_pval<0.05) {
+    
+    ref_value <- ref_value+1
+    
+    extract.xyz <- function(obj) {
+      xy <- expand.grid(x = obj$grid$x, y = obj$grid$y)
+      xyz <- cbind(xy, c(obj$grid$z))
+      names(xyz) <- c("x", "y", "z")
+      return(xyz)
+    }
+    contour.vals <- extract.xyz(obj = NMDS_model)
+  
+    plots_NMDS_fluvial_sign[[ref_value]] <- ggplot(dataset, aes(x=x,y=y))+
+    geom_vline(xintercept = 0)+geom_hline(yintercept = 0)+
+    geom_jitter(shape=21, size=5, alpha=0.8, aes(fill=centr_iso))+
+    geom_contour(data=contour.vals, aes(x, y, z = z, colour = ..level..))+
+    scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
+    #manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
+    scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
+    labs(title = paste(biod_names[groups], "Fluvial"),
+         subtitle = paste("Stress=",round(spe.abu.MDS$stress,2), 
+                          "Rsqr=", round(NMDS_model_results$r.sq,2),
+                          "Expl. Dev.=",round(NMDS_model_results$dev.expl,2)))+
+    xlab("NMDS1")+ylab("NMDS2")+
+    theme_classic()+
+    theme(legend.position = "none",
+          panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
+  }
+plots_NMDS_fluvial_sign
+}
+
+png(filename ="C:/Users/Cunilleramontcusi/NMDS_Diverse_Sign.png",
+    width =429*10, height =629*10 ,units ="px",res = 300)
+grid.arrange(plots_NMDS_sign[[1]],plots_NMDS_sign[[2]],plots_NMDS_sign[[3]],plots_NMDS_sign[[4]],
+             plots_NMDS_sign[[5]],plots_NMDS_sign[[6]],plots_NMDS_sign[[7]],plots_NMDS_sign[[8]],
+             plots_NMDS_sign[[9]],
+             plots_NMDS_fluvial_sign[[1]],plots_NMDS_fluvial_sign[[2]],
+             plots_NMDS_fluvial_sign[[3]],plots_NMDS_fluvial_sign[[4]],
+             ncol=3,nrow=5, top="Composition (NMDS)")
 dev.off()
 
-# Print NMDS y
-png(filename ="C:/Users/Cunilleramontcusi/Y_NMDS_Diverse.png",
-    width =729*10, height =629*10 ,units ="px",res = 300)
-grid.arrange(plots_NMDS_total_y[[1]][[1]],plots_NMDS_total_y[[1]][[2]],plots_NMDS_total_y[[1]][[3]],
-             plots_NMDS_total_y[[1]][[4]],plots_NMDS_total_y[[1]][[5]],plots_NMDS_total_y_fluvial[[1]][[1]],
-             
-             plots_NMDS_total_y[[2]][[1]],plots_NMDS_total_y[[2]][[2]],plots_NMDS_total_y[[2]][[3]],
-             plots_NMDS_total_y[[2]][[4]],plots_NMDS_total_y[[2]][[5]],plots_NMDS_total_y_fluvial[[2]][[2]],
-             
-             plots_NMDS_total_y[[3]][[1]],plots_NMDS_total_y[[3]][[2]],plots_NMDS_total_y[[3]][[3]],
-             plots_NMDS_total_y[[3]][[4]],plots_NMDS_total_y[[3]][[5]],plots_NMDS_total_y_fluvial[[3]][[3]],
-             
-             plots_NMDS_total_y[[4]][[1]],plots_NMDS_total_y[[4]][[2]],plots_NMDS_total_y[[4]][[3]],
-             plots_NMDS_total_y[[4]][[4]],plots_NMDS_total_y[[4]][[5]],plots_NMDS_total_y_fluvial[[4]][[4]],
-             
-             plots_NMDS_total_y[[5]][[1]],plots_NMDS_total_y[[5]][[2]],plots_NMDS_total_y[[5]][[3]],
-             plots_NMDS_total_y[[5]][[4]],plots_NMDS_total_y[[5]][[5]],plots_NMDS_total_y_fluvial[[5]][[5]],
-             
-             ncol=6,nrow=5, top="NMDS groups")
-dev.off()
+# GAM NMDS models result in table format - Supplementary like_####
+biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
+Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
+
+# Add the fluvial as a sixth network
+for (t in 1:5) {
+  plots_NMDS_total_model_result[[t]][[6]] <- plots_NMDS_fluvial_total_model_result[[5]][[t]]
+}
+
+# 
+table_groups <- list()
+for (groups in 1:5) {
+  a <- matrix(nrow =length(plots_NMDS_total_model_result[[groups]]),ncol = 10 )
+  row_reference <- 0
+  colnames(a) <- c("Network","Variable",
+                   "Intercept","Std.Err.","t-value","p-value","Smooth F-value","Smooth p-value","Adj R-sqr","Expl.Deviance")
+  for (net in 1:6) {
+      row_reference <- row_reference+1
+      
+      Netw_value <- Names_Networks[net]
+      Variable_value<- "NMDS X"
+      
+      a[row_reference,] <- c(Netw_value,Variable_value,
+                             round(plots_NMDS_total_model_result[[groups]][[net]]$p.coeff,2),
+                             round(plots_NMDS_total_model_result[[groups]][[net]]$se[1],2),
+                             round(plots_NMDS_total_model_result[[groups]][[net]]$p.t,2),
+                             round(plots_NMDS_total_model_result[[groups]][[net]]$p.pv,2),
+                             round(plots_NMDS_total_model_result[[groups]][[net]]$chi.sq,2),
+                             round(plots_NMDS_total_model_result[[groups]][[net]]$s.pv,2),
+                             round(plots_NMDS_total_model_result[[groups]][[net]]$r.sq,2),
+                             round(plots_NMDS_total_model_result[[groups]][[net]]$dev.expl,2)) 
+  }
+  table_groups[[groups]] <- as.data.frame(a)
+  write.table(table_groups[[groups]], file = paste(biod_names[groups],"GAM_NMDS_Results",".txt",sep = ""), sep = ",", quote = FALSE, row.names = F)
+}
+
+
+##########        END           ##########
+##########                      ##########
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+##########################################
+
+# Old versions
+
+## Print NMDS x
+#png(filename ="C:/Users/Cunilleramontcusi/X_NMDS_Diverse.png",
+#    width =729*10, height =629*10 ,units ="px",res = 300)
+#grid.arrange(plots_NMDS_total_x[[1]][[1]],plots_NMDS_total_x[[1]][[2]],plots_NMDS_total_x[[1]][[3]],
+#             plots_NMDS_total_x[[1]][[4]],plots_NMDS_total_x[[1]][[5]],plots_NMDS_total_x_fluvial[[1]][[1]],
+#             
+#             plots_NMDS_total_x[[2]][[1]],plots_NMDS_total_x[[2]][[2]],plots_NMDS_total_x[[2]][[3]],
+#             plots_NMDS_total_x[[2]][[4]],plots_NMDS_total_x[[2]][[5]],plots_NMDS_total_x_fluvial[[2]][[2]],
+#             
+#             plots_NMDS_total_x[[3]][[1]],plots_NMDS_total_x[[3]][[2]],plots_NMDS_total_x[[3]][[3]],
+#             plots_NMDS_total_x[[3]][[4]],plots_NMDS_total_x[[3]][[5]],plots_NMDS_total_x_fluvial[[3]][[3]],
+#             
+#             plots_NMDS_total_x[[4]][[1]],plots_NMDS_total_x[[4]][[2]],plots_NMDS_total_x[[4]][[3]],
+#             plots_NMDS_total_x[[4]][[4]],plots_NMDS_total_x[[4]][[5]],plots_NMDS_total_x_fluvial[[4]][[4]],
+#             
+#             plots_NMDS_total_x[[5]][[1]],plots_NMDS_total_x[[5]][[2]],plots_NMDS_total_x[[5]][[3]],
+#             plots_NMDS_total_x[[5]][[4]],plots_NMDS_total_x[[5]][[5]],plots_NMDS_total_x_fluvial[[5]][[5]],
+#             
+#             ncol=6,nrow=5, top="NMDS groups")
+#dev.off()
+
+## Print NMDS y
+#png(filename ="C:/Users/Cunilleramontcusi/Y_NMDS_Diverse.png",
+#    width =729*10, height =629*10 ,units ="px",res = 300)
+#grid.arrange(plots_NMDS_total_y[[1]][[1]],plots_NMDS_total_y[[1]][[2]],plots_NMDS_total_y[[1]][[3]],
+#             plots_NMDS_total_y[[1]][[4]],plots_NMDS_total_y[[1]][[5]],plots_NMDS_total_y_fluvial[[1]][[1]],
+#             
+#             plots_NMDS_total_y[[2]][[1]],plots_NMDS_total_y[[2]][[2]],plots_NMDS_total_y[[2]][[3]],
+#             plots_NMDS_total_y[[2]][[4]],plots_NMDS_total_y[[2]][[5]],plots_NMDS_total_y_fluvial[[2]][[2]],
+#             
+#             plots_NMDS_total_y[[3]][[1]],plots_NMDS_total_y[[3]][[2]],plots_NMDS_total_y[[3]][[3]],
+#             plots_NMDS_total_y[[3]][[4]],plots_NMDS_total_y[[3]][[5]],plots_NMDS_total_y_fluvial[[3]][[3]],
+#             
+#             plots_NMDS_total_y[[4]][[1]],plots_NMDS_total_y[[4]][[2]],plots_NMDS_total_y[[4]][[3]],
+#             plots_NMDS_total_y[[4]][[4]],plots_NMDS_total_y[[4]][[5]],plots_NMDS_total_y_fluvial[[4]][[4]],
+#             
+#             plots_NMDS_total_y[[5]][[1]],plots_NMDS_total_y[[5]][[2]],plots_NMDS_total_y[[5]][[3]],
+#             plots_NMDS_total_y[[5]][[4]],plots_NMDS_total_y[[5]][[5]],plots_NMDS_total_y_fluvial[[5]][[5]],
+#             
+#             ncol=6,nrow=5, top="NMDS groups")
+#dev.off()
 
 # NMDS significant plots______________________________________ ####
 biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
@@ -1912,53 +1803,53 @@ for (groups in 1:5) {
     y <- spe.abu.MDS$points[,2]
     
     dataset <- data.frame(x,y,centr_iso)
-
-sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
-my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
-                      mu   = pred_x$fit,
-                      low  = pred_x$fit - 1.96 * pred_x$se.fit,
-                      high = pred_x$fit + 1.96 * pred_x$se.fit)
-if(sign_x<0.05){
-  
-  ref_value_X <- ref_value_X+1
-  
-  plots_NMDS_x_sign[[ref_value_X]]<-ggplot(my_data, aes(x = X2, y = X1)) +
-    geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
-    geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
-    scale_fill_continuous(type = "viridis")+
-    labs(title = biod_names[groups], 
-         subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-    xlab("Centrality-Isolation")+ylab("NMDS1")+
-    theme_classic()+
-    theme(legend.position = "none",
-          panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
-}
-
-sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
-my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
-                      mu   = pred_y$fit,
-                      low  = pred_y$fit - 1.96 * pred_y$se.fit,
-                      high = pred_y$fit + 1.96 * pred_y$se.fit)
-if(sign_y<0.05){
-  
-  ref_value_Y <- ref_value_Y+1
-  
-  plots_NMDS_y_sign[[ref_value_Y]] <- ggplot(my_data, aes(x = X2, y = X1)) +
-    geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
-    geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
-    scale_fill_continuous(type = "viridis")+
-    labs(title = biod_names[groups], 
-         subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
-    xlab("Centrality-Isolation")+ylab("NMDS2")+
-    theme_classic()+
-    theme(legend.position = "none",
-          panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+    
+    sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=2, bs="cr"), method = "REML"))[[8]]
+    pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
+    my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
+                          mu   = pred_x$fit,
+                          low  = pred_x$fit - 1.96 * pred_x$se.fit,
+                          high = pred_x$fit + 1.96 * pred_x$se.fit)
+    if(sign_x<0.05){
+      
+      ref_value_X <- ref_value_X+1
+      
+      plots_NMDS_x_sign[[ref_value_X]]<-ggplot(my_data, aes(x = X2, y = X1)) +
+        geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
+        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
+        scale_fill_continuous(type = "viridis")+
+        labs(title = biod_names[groups], 
+             subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+        xlab("Centrality-Isolation")+ylab("NMDS1")+
+        theme_classic()+
+        theme(legend.position = "none",
+              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
+    }
+    
+    sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=2, bs="cr"), method = "REML"))[[8]]
+    pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
+    my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
+                          mu   = pred_y$fit,
+                          low  = pred_y$fit - 1.96 * pred_y$se.fit,
+                          high = pred_y$fit + 1.96 * pred_y$se.fit)
+    if(sign_y<0.05){
+      
+      ref_value_Y <- ref_value_Y+1
+      
+      plots_NMDS_y_sign[[ref_value_Y]] <- ggplot(my_data, aes(x = X2, y = X1)) +
+        geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
+        geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
+        scale_fill_continuous(type = "viridis")+
+        labs(title = biod_names[groups], 
+             subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
+        xlab("Centrality-Isolation")+ylab("NMDS2")+
+        theme_classic()+
+        theme(legend.position = "none",
+              panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1))) 
+    }
   }
-}
-plots_NMDS_total_x_sign[[groups]] <- plots_NMDS_x_sign
-plots_NMDS_total_y_sign[[groups]] <- plots_NMDS_y_sign
+  plots_NMDS_total_x_sign[[groups]] <- plots_NMDS_x_sign
+  plots_NMDS_total_y_sign[[groups]] <- plots_NMDS_y_sign
 }
 
 # For Fluvial network
@@ -1982,9 +1873,9 @@ for (groups in 1:5) {
   y <- spe.abu.MDS$points[,2]
   
   dataset <- data.frame(x,y,centr_iso)
- 
-  sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-  pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  sign_x <- summary.gam(gam(dataset[,1]~ s(dataset[,3], k=2, bs="cr"), method = "REML"))[[8]]
+  pred_x <- predict(gam(dataset[,1]~ s(dataset[,3], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   my_data <- data.frame(cbind(dataset[,1],dataset[,3]),
                         mu   = pred_x$fit,
                         low  = pred_x$fit - 1.96 * pred_x$se.fit,
@@ -2005,8 +1896,8 @@ for (groups in 1:5) {
             panel.background=element_rect(colour="black", fill=alpha(color_groups[groups],0.1))) 
   }
   
-  sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"))[[8]]
-  pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  sign_y <- summary.gam(gam(dataset[,2]~ s(dataset[,3], k=2, bs="cr"), method = "REML"))[[8]]
+  pred_y <- predict(gam(dataset[,2]~ s(dataset[,3], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   my_data <- data.frame(cbind(dataset[,2],dataset[,3]),
                         mu   = pred_y$fit,
                         low  = pred_y$fit - 1.96 * pred_y$se.fit,
@@ -2059,20 +1950,60 @@ grid.arrange(plot_plot_sign_plot_NMDS_x[[1]],plot_plot_sign_plot_NMDS_x[[2]],plo
 dev.off()
 
 
-##########        END           ##########
-##########                      ##########
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
-##########################################
+centr_iso_fact <- cut(dataset$centr_iso, breaks = 4,labels=c("A","B","C","D"))
+dataset[,4] <- centr_iso_fact
 
-# Old versions
+# Ordiplots in ggplot from: https://rdrr.io/github/jfq3/ggordiplots/src/R/gg_ordiplot.R
+#' Make Ordination Axis Labels
+#' Makes ordination axis labels that include, if apprpriate, the \% total variance explained by each axis.
+ord_labels <-function(ord){
+  ev <- vegan::eigenvals(ord)
+  if (!is.na(ev)[1]) {
+    tol <- -(1e-07)*ev[1]
+    ord.labels <- rep("", length(ev))
+    if ((any(is.na(ev))) | (any(ev < tol))) {
+      for ( i in 1:length(ev)) {
+        ord.labels[i] <- paste("DIM", i, sep = "")
+      }
+    }
+    else {
+      ev.pc <- round(100*(ev/sum(ev)), 2)
+      axis.names <- names(ev)
+      if (is.null(axis.names)) {
+        for ( i in 1:length(ev.pc)) {
+          ord.labels[i] <- paste("DIM", i, " ", sprintf(ev.pc[i], fmt = '%#.1f'), "%", sep="")
+        }
+      } else {
+        for (i in 1:length(ev.pc)){
+          ord.labels[i] <- paste(axis.names[i], " ", ev.pc[i],"%", sep="")
+        }
+      }
+    }
+  } else {
+    ord.labels <- colnames(vegan::scores(ord))
+  }
+  
+  return(ord.labels)
+}
+
+# Get site coordinates to plot.
+df_ord <- vegan::scores(spe.abu.MDS, display = "sites", scaling=1, choices=c(1,2))
+axis.labels <- ord_labels(spe.abu.MDS)[c(1,2)]
+df_ord <- data.frame(x=df_ord[,1], y=df_ord[,2], Group= dataset[,4])
+# Get parameters from the ordiellipse function.
+rslt <- vegan::ordiellipse(spe.abu.MDS, groups=dataset[,4], display = "sites", 
+                           scaling=1, choices=c(1,2), kind = "sd", show.groups = as.vector(levels(dataset[,4])), draw = "none", label = F)
+# Get points to plot for the ellipses.
+df_ellipse <- data.frame()
+for(g in as.vector(levels(dataset[,4]))) {
+  df_ellipse <- rbind(df_ellipse, 
+                      cbind(as.data.frame(with(df_ord[df_ord$Group==g,],
+                                               vegan:::veganCovEllipse(rslt[[g]]$cov,rslt[[g]]$center, rslt[[g]]$scale))),Group=g))
+}
+
+
+
+
 
 # Linear models __________________________________________________________________ ####
     
@@ -2428,30 +2359,30 @@ for (groups in 1:5) {
     
     GAM_p.val <- c()
     #CCA
-    GAM_p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    GAM_output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    GAM_output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    GAM_preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    GAM_p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    GAM_output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    GAM_output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    GAM_preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #Richness
-    GAM_p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    GAM_output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    GAM_output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    GAM_preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    GAM_p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    GAM_output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    GAM_output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    GAM_preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #LCBD
-    GAM_p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    GAM_output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    GAM_output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    GAM_preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    GAM_p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    GAM_output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    GAM_output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    GAM_preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #Turn
-    GAM_p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    GAM_output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    GAM_output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    GAM_preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    GAM_p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    GAM_output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    GAM_output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    GAM_preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     #RichDiff
-    GAM_p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-    GAM_output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-    GAM_output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-    GAM_preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+    GAM_p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+    GAM_output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+    GAM_output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+    GAM_preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
     
     GAM.pred <- list(GAM_preds_1, GAM_preds_2, GAM_preds_3, GAM_preds_4, GAM_preds_5)
     
@@ -2587,30 +2518,30 @@ for (groups in 1:5) {
   
   GAM_p.val <- c()
   #CCA
-  GAM_p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  GAM_output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  GAM_output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  GAM_preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  GAM_p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  GAM_output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  GAM_output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  GAM_preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #Richness
-  GAM_p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  GAM_output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  GAM_output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  GAM_preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  GAM_p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  GAM_output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  GAM_output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  GAM_preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #LCBD
-  GAM_p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  GAM_output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  GAM_output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  GAM_preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  GAM_p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  GAM_output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  GAM_output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  GAM_preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #Turn
-  GAM_p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  GAM_output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  GAM_output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  GAM_preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  GAM_p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  GAM_output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  GAM_output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  GAM_preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   #RichDiff
-  GAM_p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))[[8]]
-  GAM_output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"))
-  GAM_output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML")
-  GAM_preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=-1, bs="cr"), method = "REML"), se.fit = TRUE)
+  GAM_p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
+  GAM_output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
+  GAM_output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
+  GAM_preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
   
   GAM.pred <- list(GAM_preds_1, GAM_preds_2, GAM_preds_3, GAM_preds_4, GAM_preds_5)
   

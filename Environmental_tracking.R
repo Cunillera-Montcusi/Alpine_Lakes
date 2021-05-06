@@ -326,7 +326,6 @@ All.latitudes <- list(env.16S$lat, env.18S$lat, env.phy$lat, env.zoo$lat,
                        env$Latitude, env$Latitude[-5], env$Latitude, pred$lat)
 titles.list <- c("Alp_S16","Alp_S18","Alp_PHYT","Alp_ZOO","Norw_Fish","Norw_ZOO","Norw_Phy","Soda")
 
-remotes::install_github("r-link/corrmorant")
 library(corrmorant)
 
 corplots_output <- list()
@@ -376,12 +375,157 @@ text(x = 47.71,y = 0.65,
    
 
 
+# Check 
+
+##########################################
+##########                      ##########
+##########  PACKAGE UPLOADING   ##########
+##########                      ##########
+##########################################
+#Anlisys
+library(vegan)
+library(mgcv)
+library(MuMIn)
+#Plot and data management
+library(ggplot2)
+library(tidyverse)
+library(gtable)    
+library(grid)
+library(gridExtra) 
+
+# Define the workind directory
+setwd("C:/Users/Cunilleramontcusi/Dropbox/DAVID DOC/LLAM al DIA/1. Lunz al DIA/ALPINE_Lakes/Alpine_Lakes/upload_Envtrack")
+
+source("CUNILLERA_palette.R")
+
+##########################################
+# LOAD DATASET from ALPINE LAKES _______________________________####
+##### 16S bacterial plankton
+load("com.16S.Rdata")
+load("env.16S.Rdata")
+com.16S <- com
+env.16S <- env 
+# select OTUS with min occurence of 10 sites (=exclude rare OTUs)
+seltax<-which(colSums(com.16S>0)>9)
+com_S16<-com.16S[,seltax]
+
+##### 18S bacterial plankton
+load("com.18S.Rdata")
+load("env.18S.Rdata")
+com.18S <- com
+env.18S <- env 
+# select OTUS with min occurence of 10 sites (=exclude rare OTUs)
+seltax<-which(colSums(com.18S>0)>9)
+com.18S<-com.18S[,seltax]
+
+##### Phytoplankton bacterial plankton
+load("com.phyt.Rdata")
+load("env.phyt.Rdata")
+com.phy <- com
+env.phy <- env 
+# select OTUS with min occurence of 2 sites (=exclude rare OTUs)
+seltax<-which(colSums(com.phy>0)>1)
+com.phy<-com.phy[,seltax]
+
+##### Zooplankton bacterial plankton
+load("com.zoo.Rdata")
+load("env.zoo.Rdata")
+com.zoo <- com
+env.zoo <- env 
+
+#_______________________________________________________________###
+
+# Data preparation and list building 
+list.names <- c("S16", "S18", "phyto", "zoo")
+comm_data<- list(com.16S, com.18S, com.phy, com.zoo)
+names(comm_data) <-list.names 
+
+list.names.env <- c("env.S16", "env.S18", "env.phyto", "env.zoo")
+env_data<- list(env.16S, env.18S, env.phy, env.zoo)
+names(env_data) <-list.names.env 
+
+# Give individual names to each community to better further treatmetn  
+ALP_S16 <- comm_data$S16
+apply(ALP_S16,1,sum)
+
+ALP_S18 <- comm_data$S18
+apply(ALP_S18,1,sum)
+
+ALP_phyto <- comm_data$phyto
+apply(ALP_phyto,1,sum)
+
+ALP_Zoo <- comm_data$zoo
+apply(ALP_Zoo,1,sum)
+
+# The same for environmental variables (the ones selected)
+ALP_S16_env <- as.matrix(env_data$env.S16[,4:6])
+ALP_S18_env <- as.matrix(env_data$env.S18[,4:6])
+ALP_phyto_env <- as.matrix(env_data$env.phyto[,4:6])
+ALP_Zoo_env <- as.matrix(env_data$env.zoo[,4:6])
+
+ALP_list_env <- list(ALP_S16_env,ALP_S18_env,ALP_phyto_env,ALP_Zoo_env)
+#_______________________________________________________________###
+
+ALP_list_com_PA <- list(com.16S, com.18S, com.phy, com.zoo)
+
+com.16S <- ifelse(com.16S>0,1,0)
+com.18S <- ifelse(com.18S>0,1,0)
+com.phy <- ifelse(com.phy>0,1,0)
+com.zoo <- ifelse(com.zoo>0,1,0)
+
+ALP_list_com <- list(com.16S, com.18S, com.phy, com.zoo)
+
+CCA_Env_Track <- function(communnity_dataset,environmental_dataset){
+  require(pscl)
+  # Calculate the CCA with the community data and the environmental and the corresponding distance
+  # P/A - Jaccard distance
+  cca1<-cca(ALP_list_com_PA[[4]]~ALP_list_env[[4]])
+  
+  # Fitteds - we predict according to the model where our samples should be
+  fitteds <- fitted(cca1, model="CCA", type= "response")
+  
+  tst_coeficient <- c()# Output to drop the coefficients
+  # Correlation between predicted and observed values
+  for (e in 1:nrow(ALP_list_com_PA[[4]])) {
+    
+    #tst_coeficient[e] <- cor(fitteds[e,],as.numeric(ALP_list_com_PA[[4]][e,]),method = "pearson")
+    
+    model <- glm(as.numeric(ALP_list_com_PA[[4]][e,])~fitteds[e,],family = "binomial")
+    tst_coeficient[e] <- pR2(model)["McFadden"]
+  }
+  tst_coeficient
+}
 
 
+Output_PA <- list()
+Output <- list()
+for (i in 1:4) {
+Output_PA[[i]]<- CCA_Env_Track(communnity_dataset =ALP_list_com_PA[[i]] ,environmental_dataset =ALP_list_env[[i]])
+Output[[i]] <- CCA_Env_Track(communnity_dataset =ALP_list_com[[i]] ,environmental_dataset =ALP_list_env[[i]])  
+}
 
-
-
-
+corplots_output <- list()
+for (w in 1:4) {
+      a <- cbind(Output_PA[[w]],Output[[w]])
+      colnames(a) <- c("CCA_PA","CCA")
+      corplots_output[[w]] <- ggcorrm(a, 
+                                      mapping = aes(col = .corr, fill = .corr),
+                                      bg_dia = "grey20", 
+                                      rescale = "by_sd") +
+        lotri(geom_smooth(method = "lm", size = .3)) +
+        lotri(geom_point(alpha = 0.5)) +
+        utri_corrtext(nrow = 2, squeeze = 0.6) +
+        dia_names(y_pos = 0.15, size = 3, color = "white") +
+        dia_density(lower = 0.3, color = "grey80", fill = "grey60", size = .3) +
+        scale_color_corr(aesthetics = c("fill", "color"))
+}
+    
+  grid.newpage()
+    png(filename = "Corplots_Env_Track.png" ,width=8000,height=4000,units="px",res=400)
+    grid.arrange(corplots_output[[1]],corplots_output[[2]],
+                 corplots_output[[3]],corplots_output[[4]],
+                 ncol = 2, nrow=2)
+    dev.off()
 
 
 

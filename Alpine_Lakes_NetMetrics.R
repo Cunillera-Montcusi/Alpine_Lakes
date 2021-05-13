@@ -13,6 +13,12 @@ library(mgcv)
 library(Rmisc)
 library(gamm4)
 library(MuMIn)
+library(usdm) # Collinearity
+library(randomForestSRC) # RF
+library(ggRandomForests) # RF
+library(gbm) # BRT
+library(dismo) # BRT
+library(caret)
 
 
 # Ploting and image 
@@ -810,11 +816,12 @@ for (e in 1:length(cordenades_xarxes)) {
   maps_Alps[[e]] <- ggplot(n, layout=as.matrix(cordenades_xarxes[[e]][,1:2]),
                            aes(x = x, y = y, xend = xend, yend = yend))+
     geom_edges( color = "grey40", size=0.1, alpha=0.4) +
-    geom_nodes(aes(fill=CC_values,alpha=family, size=family),color ="grey20" ,shape=21, alpha=.75)+
+    geom_nodes(aes(fill=CC_values,alpha=family, size=family, color=family) ,shape=21, alpha=.75)+
     scale_fill_viridis(discrete = F,alpha = 1,begin = 1,end = 0)+
     labs(x="",y="")+
     scale_alpha_manual(values = c(0.2,5))+
     scale_size_manual(values = c(1,3))+
+    scale_color_manual(values = c("grey30","red"))+
     theme_classic()+
     theme(axis.text = element_blank(),
           axis.ticks = element_blank(),
@@ -846,7 +853,7 @@ names(PCA_fluvial_network_results) <- c("PCA_fluvial_network")
 cols <-ConComp$membership 
 cols[unlist(res.nv[[3]])[correspondence_BASINS]] <- "red"
 cols <- ifelse(cols==1, "green",ifelse(cols==2,"blue","red"))
-sizes <- ifelse(cols=="red",1.5,0.5)
+sizes <- ifelse(cols=="red",3,0.6)
 
 rbPal <- viridis_pal(1,0,1)
 #Plots closeness "all"
@@ -856,7 +863,7 @@ Col <- rbPal(length(fluvial_network_data[[1]][,1]))[as.numeric(cut(fluvial_netwo
 Col[which(cols=="red")] <- "red"
 png(filename = "C:/Users/Cunilleramontcusi/Alpine_fluvial_CLOS.png", width = 20000, height = 20000, res=500)
 par(mar=c(0,0,0,0))
-plot(GRAPH_xarxes_fluvial[[1]], vertex.label = NA, vertex.size = 1, vertex.size2 = sizes, vertex.color=Col,
+plot(GRAPH_xarxes_fluvial[[1]], vertex.label = NA, vertex.size = sizes, vertex.size2 = sizes, vertex.color=Col,
      edge.width=0.01, edge.color="grey50")
 dev.off()
 
@@ -974,7 +981,7 @@ for (r in 1:5) {
 
 image_list <- list("s16_image.png", "s18_image.png","phy_image.png","zoo_image.png","zooS18_image.png")
 
-# GAM models______________________________________ ####
+# GAM models_______________________________________________________________________________ ####
 Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km")
 
 GAMmodel_resutls_total <- list()
@@ -995,31 +1002,124 @@ for (groups in 1:5) {
     output_model_results <- list()
     
     p.val <- c()
-    #CCA
+    
+    #CCA ___________________________________________________________________________________________
     p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
     output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
     output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
     preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-    #Richness
-    p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
-    output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
-    preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-    #LCBD
-    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
-    output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
-    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-    #Turn
-    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
-    output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
-    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-    #RichDiff
-    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
-    output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
-    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #Richness ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,3],Sel_vari) 
+    colnames(Model_RF)[1] <- "Rich"
+    RF_output <- rfsrc(Rich ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,3]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,3] <- resid_values
+    #GAM model
+    p.val[2] <- summary.gam(gam(dataset[,3] ~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    output_results[[2]] <- summary.gam(gam(dataset[,3] ~ s(dataset[,1], k=3, bs="cr"), method = "REML"))
+    output_model_results[[2]] <- gam(dataset[,3] ~ s(dataset[,1], k=3, bs="cr"), method = "REML")
+    preds_2<- predict(gam(dataset[,3] ~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #LCBD ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,4],Sel_vari) 
+    colnames(Model_RF)[1] <- "LCBD"
+    RF_output <- rfsrc(LCBD ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,4]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,4] <- resid_values
+    #GAM model
+    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))
+    output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML")
+    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #Turn ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,5],Sel_vari) 
+    colnames(Model_RF)[1] <- "Turn"
+    RF_output <- rfsrc(Turn ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,5]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,5] <- resid_values
+    # GAM model
+    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))
+    output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML")
+    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #RichDiff ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,6],Sel_vari) 
+    colnames(Model_RF)[1] <- "RichDiff"
+    RF_output <- rfsrc(RichDiff ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,6]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,6] <- resid_values
+    # GAM model 
+    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))
+    output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML")
+    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
     
     GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
     
@@ -1039,12 +1139,7 @@ for (groups in 1:5) {
           ylab(colnames(dataset)[var+1])+xlab("Centrality-Isolation")+
           theme_classic()+
           theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
-                legend.position = "none")+  
-            annotation_custom(rasterGrob(S18_protista),
-                              xmin = max(my_data$X2)-c(max(my_data$X2)-0.999),
-                              xmax = max(my_data$X2),
-                              ymin = max(my_data$X1)-c(max(my_data$X1)-0.3),
-                              ymax = max(my_data$X1)) 
+                legend.position = "none")
 
           plots_grups[[var]]<- ggdraw() +  draw_plot(the_plot)+
                                             draw_image(magick::image_read(image_list[[groups]]),
@@ -1104,31 +1199,124 @@ for (groups in 1:5) {
   output_model_results <- list()
   
   p.val <- c()
-  #CCA
+  
+  #CCA ___________________________________________________________________________________________
   p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
   output_results[[1]] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
   output_model_results[[1]] <- gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
   preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-  #Richness
-  p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  output_results[[2]] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
-  output_model_results[[2]] <- gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
-  preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-  #LCBD
-  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
-  output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
-  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-  #Turn
-  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
-  output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
-  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-  #RichDiff
-  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))
-  output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML")
-  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  #Richness ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,3],Sel_vari) 
+  colnames(Model_RF)[1] <- "Rich"
+  RF_output <- rfsrc(Rich ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,3]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,3] <- resid_values
+  #GAM model
+  p.val[2] <- summary.gam(gam(dataset[,3] ~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  output_results[[2]] <- summary.gam(gam(dataset[,3] ~ s(dataset[,1], k=3, bs="cr"), method = "REML"))
+  output_model_results[[2]] <- gam(dataset[,3] ~ s(dataset[,1], k=3, bs="cr"), method = "REML")
+  preds_2<- predict(gam(dataset[,3] ~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  #LCBD ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,4],Sel_vari) 
+  colnames(Model_RF)[1] <- "LCBD"
+  RF_output <- rfsrc(LCBD ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,4]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,4] <- resid_values
+  #GAM model
+  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  output_results[[3]] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))
+  output_model_results[[3]] <- gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML")
+  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  #Turn ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,5],Sel_vari) 
+  colnames(Model_RF)[1] <- "Turn"
+  RF_output <- rfsrc(Turn ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,5]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,5] <- resid_values
+  # GAM model
+  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  output_results[[4]] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))
+  output_model_results[[4]] <- gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML")
+  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  #RichDiff ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,6],Sel_vari) 
+  colnames(Model_RF)[1] <- "RichDiff"
+  RF_output <- rfsrc(RichDiff ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,6]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,6] <- resid_values
+  # GAM model 
+  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  output_results[[5]] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))
+  output_model_results[[5]] <- gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML")
+  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
   
   GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
   
@@ -1190,7 +1378,7 @@ for (groups in 1:5) {
 
 
 
-# GAM models result in table format - Supplementary like_####
+# GAM models result in table format - Supplementary like____________________________________####
 biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
 Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
 
@@ -1229,106 +1417,7 @@ for (groups in 1:5) {
 
 
 
-# Summary plot GAM models______________________________________ ####
-sign_netw <- list()
-sign_groups <- list()
-for (group in 1:5) {
-  for (netw in 1:5) {
-    sign <- c()
-    sign[1] <-GAMmodel_resutls_total[[group]][[netw]][[1]][[8]]
-    sign[2] <-GAMmodel_resutls_total[[group]][[netw]][[2]][[8]]
-    sign[3] <-GAMmodel_resutls_total[[group]][[netw]][[3]][[8]]
-    sign[4] <-GAMmodel_resutls_total[[group]][[netw]][[4]][[8]]
-    sign[5] <-GAMmodel_resutls_total[[group]][[netw]][[5]][[8]] 
-    sign_netw[[netw]] <- sign
-  }
-  sign_groups[[group]] <- sign_netw
-}
-
-flu_sign_groups <- list()
-for (group in 1:5) {
-  sign <- c()
-  sign[1] <-GAMmodel_resutls_fluvial[[group]][[1]][[8]]
-  sign[2] <-GAMmodel_resutls_fluvial[[group]][[2]][[8]]
-  sign[3] <-GAMmodel_resutls_fluvial[[group]][[3]][[8]]
-  sign[4] <-GAMmodel_resutls_fluvial[[group]][[4]][[8]]
-  sign[5] <-GAMmodel_resutls_fluvial[[group]][[5]][[8]]
-  flu_sign_groups[[group]] <- sign
-}
-
-
-Names_Variab <- c("Environmental tracking", "Species richness", "LCBD", "Replacement", "Richness difference")
-plots_significance <- list()
-for (variable in 1:5) {
-  
-  max_netw <- cbind(c(sign_groups[[1]][[1]][[variable]], sign_groups[[2]][[1]][[variable]], sign_groups[[3]][[1]][[variable]], 
-                      sign_groups[[4]][[1]][[variable]], sign_groups[[5]][[1]][[variable]]),
-                    rep("600 km", 5), 
-                    c("S16","S18","Phy","Zoo", "S18zoo"))
-  
-  mid_netw <- cbind(c(sign_groups[[1]][[2]][[variable]], sign_groups[[2]][[2]][[variable]], sign_groups[[3]][[2]][[variable]], 
-                      sign_groups[[4]][[2]][[variable]], sign_groups[[5]][[2]][[variable]]),
-                    rep("300 km", 5), 
-                    c("S16","S18","Phy","Zoo", "S18zoo"))
-  
-  mid_mid_netw <- cbind(c(sign_groups[[1]][[3]][[variable]], sign_groups[[2]][[3]][[variable]], sign_groups[[3]][[3]][[variable]], 
-                          sign_groups[[4]][[3]][[variable]], sign_groups[[5]][[3]][[variable]]),
-                        rep("100 km", 5), 
-                        c("S16","S18","Phy","Zoo", "S18zoo"))
-  
-  small_netw <- cbind(c(sign_groups[[1]][[4]][[variable]], sign_groups[[2]][[4]][[variable]], sign_groups[[3]][[4]][[variable]], 
-                        sign_groups[[4]][[4]][[variable]], sign_groups[[5]][[4]][[variable]]),
-                      rep("60 km", 5), 
-                      c("S16","S18","Phy","Zoo", "S18zoo"))
-  
-  min_netw <- cbind(c(sign_groups[[1]][[5]][[variable]], sign_groups[[2]][[5]][[variable]], sign_groups[[3]][[5]][[variable]], 
-                      sign_groups[[4]][[5]][[variable]], sign_groups[[5]][[5]][[variable]]),
-                    rep("6 km", 5), 
-                    c("S16","S18","Phy","Zoo", "S18zoo"))
-  
-  fluv_netw <- cbind(c(flu_sign_groups[[1]][[variable]], flu_sign_groups[[2]][[variable]], flu_sign_groups[[3]][[variable]], 
-                       flu_sign_groups[[4]][[variable]], flu_sign_groups[[5]][[variable]]),
-                     rep("Fluvial", 5), 
-                     c("S16","S18","Phy","Zoo", "S18zoo"))
-  
-  
-  dataset_pval <- as.data.frame(rbind(max_netw,mid_netw,mid_mid_netw,small_netw,min_netw,fluv_netw))
-  colnames(dataset_pval) <- c("val","Network","Group")
-  dataset_pval$val <-as.numeric(dataset_pval$val)
-  dataset_pval$Network <- factor(dataset_pval$Network,
-                                 levels = c("600 km", "300 km","100 km","60 km","6 km", "Fluvial"))
-  dataset_pval$Group <- factor(dataset_pval$Group,
-                               levels = c("S16","S18","Phy","Zoo", "S18zoo"))
-  significants <- rep("NoSign",5*6)
-  significants[which(dataset_pval$val<0.05)]<- "Sign"
-  dataset_pval$Sign <- factor(significants) 
-  
-  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
-  
-  plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(val)))+
-    geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
-    geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
-    scale_alpha_manual(values = c(0.2,0.9))+
-    scale_size_manual(values = c(2,6))+
-    scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
-                               color_groups[4],color_groups[5],color_groups[6]))+
-    scale_y_continuous(expand = c(0.2,0.01),
-                       breaks =c(0.2,0.4,0.6,0.8,1) )+
-    geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
-    labs(title=Names_Variab[variable])+ylab("P-values")+xlab("Network")+
-    theme_classic()
-}
-
-png(filename =paste("C:/Users/Cunilleramontcusi/All_Significance_Groups.png"),
-    width =900*5 ,height =700*5 ,units ="px",res = 400)
-grid.arrange(plots_significance[[1]],plots_significance[[2]],
-             plots_significance[[3]],plots_significance[[4]],
-             plots_significance[[5]],
-             ncol=2,nrow=3, top="Significance values")
-dev.off()      
-
-
-# GAM plot significant______________________________________ ####
+# GAM plot significant_____________________________________________________________________ ####
 # For Euclidean network
 GAM_Sign_plots_total <- list()
 ref_value <- 0
@@ -1344,31 +1433,124 @@ for (groups in 1:5) {
     p.val <- c()
     r_sqr <- c()
     dev_expl <- c()
-    #CCA
-    p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    r_sqr[1] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-    dev_expl[1] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-    preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-    #Richness
-    p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    r_sqr[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-    dev_expl[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-    preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-    #LCBD
-    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    r_sqr[3] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-    dev_expl[3] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-    #Turn
-    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    r_sqr[4] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-    dev_expl[4] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-    #RichDiff
-    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-    r_sqr[5] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-    dev_expl[5] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #CCA ___________________________________________________________________________________________
+    p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    r_sqr[1] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+    dev_expl[1] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+    preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #Richness ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,3],Sel_vari) 
+    colnames(Model_RF)[1] <- "Rich"
+    RF_output <- rfsrc(Rich ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,3]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,3] <- resid_values
+    #GAM model
+    p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    r_sqr[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+    dev_expl[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+    preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #LCBD ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,4],Sel_vari) 
+    colnames(Model_RF)[1] <- "LCBD"
+    RF_output <- rfsrc(LCBD ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,4]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,4] <- resid_values
+    #GAM model
+    p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    r_sqr[3] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+    dev_expl[3] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+    preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #Turn ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,5],Sel_vari) 
+    colnames(Model_RF)[1] <- "Turn"
+    RF_output <- rfsrc(Turn ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,5]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,5] <- resid_values
+    # GAM model
+    p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    r_sqr[4] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+    dev_expl[4] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+    preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+    
+    #RichDiff ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,6],Sel_vari) 
+    colnames(Model_RF)[1] <- "RichDiff"
+    RF_output <- rfsrc(RichDiff ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,6]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,6] <- resid_values
+    # GAM model 
+    p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+    r_sqr[5] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+    dev_expl[5] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+    preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
     
     GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
     
@@ -1415,31 +1597,123 @@ for (groups in 1:5) {
   output_results <- list()
   p.val <- c()
   
-  #CCA
-  p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  r_sqr[1] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-  dev_expl[1] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-  preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-  #Richness
-  p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  r_sqr[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-  dev_expl[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-  preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-  #LCBD
-  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  r_sqr[3] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-  dev_expl[3] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-  #Turn
-  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  r_sqr[4] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-  dev_expl[4] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
-  #RichDiff
-  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[8]]
-  r_sqr[5] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[10]]
-  dev_expl[5] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"))[[14]]
-  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=2, bs="cr"), method = "REML"), se.fit = TRUE)
+  #CCA ___________________________________________________________________________________________
+  p.val[1] <-summary.gam(gam(dataset[,2]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  r_sqr[1] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+  dev_expl[1] <- summary.gam(gam(dataset[,2]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+  preds_1 <- predict(gam(dataset[,2]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  #Richness ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,3],Sel_vari) 
+  colnames(Model_RF)[1] <- "Rich"
+  RF_output <- rfsrc(Rich ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,3]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,3] <- resid_values
+  #GAM model
+  p.val[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  r_sqr[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+  dev_expl[2] <- summary.gam(gam(dataset[,3]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+  preds_2<- predict(gam(dataset[,3]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  #LCBD ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,4],Sel_vari) 
+  colnames(Model_RF)[1] <- "LCBD"
+  RF_output <- rfsrc(LCBD ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,4]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,4] <- resid_values
+  #GAM model
+  p.val[3] <-summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  r_sqr[3] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+  dev_expl[3] <- summary.gam(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+  preds_3<- predict(gam(dataset[,4]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  #Turn ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,5],Sel_vari) 
+  colnames(Model_RF)[1] <- "Turn"
+  RF_output <- rfsrc(Turn ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,5]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,5] <- resid_values
+  # GAM model
+  p.val[4] <-summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  r_sqr[4] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+  dev_expl[4] <- summary.gam(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+  preds_4<- predict(gam(dataset[,5]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
+  
+  #RichDiff ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,6],Sel_vari) 
+  colnames(Model_RF)[1] <- "RichDiff"
+  RF_output <- rfsrc(RichDiff ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,6]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,6] <- resid_values
+  # GAM model 
+  p.val[5] <-summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[8]]
+  r_sqr[5] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[10]]
+  dev_expl[5] <- summary.gam(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"))[[14]]
+  preds_5<- predict(gam(dataset[,6]~ s(dataset[,1], k=3, bs="cr"), method = "REML"), se.fit = TRUE)
   
   GAM.pred <- list(preds_1, preds_2, preds_3, preds_4, preds_5)
   
@@ -1486,23 +1760,24 @@ for(d in c(length(GAM_Sign_plots_total)+1):c(length(GAM_Sign_plots_total)+length
 png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_EnvTrack.png",
     width =582*4 ,height =629*2 ,units ="px",res = 300)
 grid.arrange(plot_plot_sign_plot[[1]],plot_plot_sign_plot[[2]],
-             ncol=2,nrow=1, top="Assembly (Environmental Tracking)")
+             ncol=2,nrow=1, top="Community Assembly (environmental tracking)")
 dev.off()
+
+length(plot_plot_sign_plot)
 
 # Printing for Diverse
 png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_Diverse.png",
     width =629*6 ,height =629*6 ,units ="px",res = 300)
-grid.arrange(plot_plot_sign_plot[[3]],plot_plot_sign_plot[[5]], plot_plot_sign_plot[[6]],
-             plot_plot_sign_plot[[7]],plot_plot_sign_plot[[8]],plot_plot_sign_plot[[9]],plot_plot_sign_plot[[19]],
-             plot_plot_sign_plot[[10]],plot_plot_sign_plot[[12]],
-             plot_plot_sign_plot[[13]],plot_plot_sign_plot[[14]],plot_plot_sign_plot[[15]],
-             plot_plot_sign_plot[[16]],plot_plot_sign_plot[[17]],plot_plot_sign_plot[[18]],
-             ncol=4,nrow=4, top="Diversity")
+grid.arrange(plot_plot_sign_plot[[3]],plot_plot_sign_plot[[4]],plot_plot_sign_plot[[5]], plot_plot_sign_plot[[6]],
+             plot_plot_sign_plot[[14]],plot_plot_sign_plot[[7]],plot_plot_sign_plot[[8]],plot_plot_sign_plot[[9]],
+             plot_plot_sign_plot[[10]],plot_plot_sign_plot[[11]],plot_plot_sign_plot[[12]],
+             plot_plot_sign_plot[[13]],
+             ncol=3,nrow=4, top="Community Diversity (alpha & beta)")
 dev.off()
 
 
 
-# NMDS plots______________________________________ ####
+# NMDS plots_______________________________________________________________________________ ####
 biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
 net_names <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
 color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
@@ -1637,11 +1912,11 @@ grid.arrange(plots_NMDS_total[[1]][[1]],plots_NMDS_total[[1]][[2]],plots_NMDS_to
              plots_NMDS_total[[5]][[1]],plots_NMDS_total[[5]][[2]],plots_NMDS_total[[5]][[3]],
              plots_NMDS_total[[5]][[4]],plots_NMDS_total[[5]][[5]],plots_NMDS_total_fluvial[[5]][[5]],
              
-             ncol=6,nrow=5, top="NMDS groups")
+             ncol=6,nrow=5, top="NMDS")
 dev.off()
 
 
-# NMDS plots significant Ordisurfs______________________________________ ####
+# NMDS plots significant Ordisurfs_________________________________________________________ ####
 
 # For Euclidean network
 plots_NMDS_sign <- list()
@@ -1758,16 +2033,16 @@ plots_NMDS_fluvial_sign
 }
 
 png(filename ="C:/Users/Cunilleramontcusi/NMDS_Diverse_Sign.png",
-    width =429*10, height =629*10 ,units ="px",res = 300)
+    width =629*8 ,height =629*8 ,units ="px",res = 300)
 grid.arrange(plots_NMDS_sign[[1]],plots_NMDS_sign[[2]],plots_NMDS_sign[[3]],plots_NMDS_sign[[4]],
-             plots_NMDS_sign[[5]],plots_NMDS_sign[[6]],plots_NMDS_sign[[7]],plots_NMDS_sign[[8]],
-             plots_NMDS_sign[[9]],
-             plots_NMDS_fluvial_sign[[1]],plots_NMDS_fluvial_sign[[2]],
-             plots_NMDS_fluvial_sign[[3]],plots_NMDS_fluvial_sign[[4]],
-             ncol=3,nrow=5, top="Composition (NMDS)")
+             plots_NMDS_fluvial_sign[[1]],
+             plots_NMDS_fluvial_sign[[2]],
+             plots_NMDS_sign[[5]],plots_NMDS_sign[[6]],plots_NMDS_sign[[7]],plots_NMDS_fluvial_sign[[3]],
+             plots_NMDS_sign[[8]],plots_NMDS_sign[[9]],plots_NMDS_fluvial_sign[[4]],
+             ncol=4,nrow=4, top="Community Composition (NMDS SS)")
 dev.off()
 
-# GAM NMDS models result in table format - Supplementary like_####
+# GAM NMDS models result in table format - Supplementary like_______________________________####
 biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
 Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
 
@@ -1802,6 +2077,110 @@ for (groups in 1:5) {
   table_groups[[groups]] <- as.data.frame(a)
   write.table(table_groups[[groups]], file = paste(biod_names[groups],"GAM_NMDS_Results",".txt",sep = ""), sep = ",", quote = FALSE, row.names = F)
 }
+
+
+
+# Summary plot GAM models__________________________________________________________________ ####
+sign_netw <- list()
+sign_groups <- list()
+
+for (group in 1:5) {
+  for (netw in 1:5) {
+    sign <- c()
+    sign[1] <-GAMmodel_resutls_total[[group]][[netw]][[1]][[8]]
+    sign[2] <-GAMmodel_resutls_total[[group]][[netw]][[2]][[8]]
+    sign[3] <-GAMmodel_resutls_total[[group]][[netw]][[3]][[8]]
+    sign[4] <-GAMmodel_resutls_total[[group]][[netw]][[4]][[8]]
+    sign[5] <-GAMmodel_resutls_total[[group]][[netw]][[5]][[8]]
+    sign[6] <-plots_NMDS_total_model_result[[group]][[netw]][[8]]
+    sign_netw[[netw]] <- sign
+  }
+  sign_groups[[group]] <- sign_netw
+}
+
+flu_sign_groups <- list()
+for (group in 1:5) {
+  sign <- c()
+  sign[1] <-GAMmodel_resutls_fluvial[[group]][[1]][[8]]
+  sign[2] <-GAMmodel_resutls_fluvial[[group]][[2]][[8]]
+  sign[3] <-GAMmodel_resutls_fluvial[[group]][[3]][[8]]
+  sign[4] <-GAMmodel_resutls_fluvial[[group]][[4]][[8]]
+  sign[5] <-GAMmodel_resutls_fluvial[[group]][[5]][[8]]
+  sign[6] <-plots_NMDS_fluvial_total_model_result[[5]][[group]][[8]]
+  flu_sign_groups[[group]] <- sign
+}
+
+
+Names_Variab <- c("Environmental tracking", "Species richness", "LCBD", "Replacement", "Richness difference","NMDS SS" )
+plots_significance <- list()
+for (variable in 1:6) {
+  
+  max_netw <- cbind(c(sign_groups[[1]][[1]][[variable]], sign_groups[[2]][[1]][[variable]], sign_groups[[3]][[1]][[variable]], 
+                      sign_groups[[4]][[1]][[variable]], sign_groups[[5]][[1]][[variable]]),
+                    rep("600 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  mid_netw <- cbind(c(sign_groups[[1]][[2]][[variable]], sign_groups[[2]][[2]][[variable]], sign_groups[[3]][[2]][[variable]], 
+                      sign_groups[[4]][[2]][[variable]], sign_groups[[5]][[2]][[variable]]),
+                    rep("300 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  mid_mid_netw <- cbind(c(sign_groups[[1]][[3]][[variable]], sign_groups[[2]][[3]][[variable]], sign_groups[[3]][[3]][[variable]], 
+                          sign_groups[[4]][[3]][[variable]], sign_groups[[5]][[3]][[variable]]),
+                        rep("100 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  small_netw <- cbind(c(sign_groups[[1]][[4]][[variable]], sign_groups[[2]][[4]][[variable]], sign_groups[[3]][[4]][[variable]], 
+                        sign_groups[[4]][[4]][[variable]], sign_groups[[5]][[4]][[variable]]),
+                      rep("60 km", 5), 
+                      c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  min_netw <- cbind(c(sign_groups[[1]][[5]][[variable]], sign_groups[[2]][[5]][[variable]], sign_groups[[3]][[5]][[variable]], 
+                      sign_groups[[4]][[5]][[variable]], sign_groups[[5]][[5]][[variable]]),
+                    rep("6 km", 5), 
+                    c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  fluv_netw <- cbind(c(flu_sign_groups[[1]][[variable]], flu_sign_groups[[2]][[variable]], flu_sign_groups[[3]][[variable]], 
+                       flu_sign_groups[[4]][[variable]], flu_sign_groups[[5]][[variable]]),
+                     rep("Fluvial", 5), 
+                     c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+  
+  dataset_pval <- as.data.frame(rbind(max_netw,mid_netw,mid_mid_netw,small_netw,min_netw,fluv_netw))
+  colnames(dataset_pval) <- c("val","Network","Group")
+  dataset_pval$val <-as.numeric(dataset_pval$val)
+  dataset_pval$Network <- factor(dataset_pval$Network,
+                                 levels = c("600 km", "300 km","100 km","60 km","6 km", "Fluvial"))
+  dataset_pval$Group <- factor(dataset_pval$Group,
+                               levels = c("S16","S18","Phy","Zoo", "S18zoo"))
+  significants <- rep("NoSign",5*6)
+  significants[which(dataset_pval$val<0.05)]<- "Sign"
+  dataset_pval$Sign <- factor(significants) 
+  
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  
+  plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(val)))+
+    geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
+    geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
+    scale_alpha_manual(values = c(0.2,0.9))+
+    scale_size_manual(values = c(2,6))+
+    scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
+                               color_groups[4],color_groups[5],color_groups[6]))+
+    scale_y_continuous(expand = c(0.2,0.01),
+                       breaks =c(0.2,0.4,0.6,0.8,1) )+
+    geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
+    labs(title=Names_Variab[variable])+ylab("P-values")+xlab("Network")+
+    theme_classic()
+}
+
+png(filename =paste("C:/Users/Cunilleramontcusi/All_Significance_Groups.png"),
+    width =900*5 ,height =700*5 ,units ="px",res = 400)
+grid.arrange(plots_significance[[1]],plots_significance[[2]],
+             plots_significance[[3]],plots_significance[[4]],
+             plots_significance[[5]],plots_significance[[6]],
+             ncol=2,nrow=3, top="Significance values")
+dev.off()      
+
 
 
 ##########        END           ##########

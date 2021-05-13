@@ -375,13 +375,10 @@ text(x = 47.71,y = 0.65,
    
 
 
-# Check 
+# Check PA vs Qantitative dataset ________________####
 
-##########################################
-##########                      ##########
-##########  PACKAGE UPLOADING   ##########
-##########                      ##########
-##########################################
+#PACKAGE UPLOADING
+
 #Anlisys
 library(vegan)
 library(mgcv)
@@ -466,44 +463,57 @@ ALP_Zoo_env <- as.matrix(env_data$env.zoo[,4:6])
 ALP_list_env <- list(ALP_S16_env,ALP_S18_env,ALP_phyto_env,ALP_Zoo_env)
 #_______________________________________________________________###
 
-ALP_list_com_PA <- list(com.16S, com.18S, com.phy, com.zoo)
+ALP_list_com <- list(com.16S, com.18S, com.phy, com.zoo)
 
 com.16S <- ifelse(com.16S>0,1,0)
 com.18S <- ifelse(com.18S>0,1,0)
 com.phy <- ifelse(com.phy>0,1,0)
 com.zoo <- ifelse(com.zoo>0,1,0)
 
-ALP_list_com <- list(com.16S, com.18S, com.phy, com.zoo)
+ALP_list_com_PA <- list(com.16S, com.18S, com.phy, com.zoo)
 
 CCA_Env_Track <- function(communnity_dataset,environmental_dataset){
-  require(pscl)
   # Calculate the CCA with the community data and the environmental and the corresponding distance
   # P/A - Jaccard distance
-  cca1<-cca(ALP_list_com_PA[[4]]~ALP_list_env[[4]])
+  cca1<-cca(communnity_dataset~environmental_dataset)
   
   # Fitteds - we predict according to the model where our samples should be
   fitteds <- fitted(cca1, model="CCA", type= "response")
   
   tst_coeficient <- c()# Output to drop the coefficients
   # Correlation between predicted and observed values
-  for (e in 1:nrow(ALP_list_com_PA[[4]])) {
+  for (e in 1:nrow(communnity_dataset)) {
     
-    #tst_coeficient[e] <- cor(fitteds[e,],as.numeric(ALP_list_com_PA[[4]][e,]),method = "pearson")
-    
-    model <- glm(as.numeric(ALP_list_com_PA[[4]][e,])~fitteds[e,],family = "binomial")
-    tst_coeficient[e] <- pR2(model)["McFadden"]
+    tst_coeficient[e] <- cor(fitteds[e,],as.numeric(communnity_dataset[e,]),method = "pearson")
+  }
+  tst_coeficient
+}
+CCA_Env_Track_PA <- function(communnity_dataset,environmental_dataset){
+  require(pscl)
+  # Calculate the CCA with the community data and the environmental and the corresponding distance
+  # P/A - Jaccard distance
+  cca1<-cca(communnity_dataset~environmental_dataset)
+  
+  # Fitteds - we predict according to the model where our samples should be
+  fitteds <- fitted(cca1, model="CCA", type= "response")
+  
+  tst_coeficient <- c()# Output to drop the coefficients
+  # Correlation between predicted and observed values
+  for (e in 1:nrow(communnity_dataset)) {
+    model <- glm(as.numeric(communnity_dataset[e,])~fitteds[e,],family = "binomial")
+    tst_coeficient[e]<- pR2(model)["McFadden"]
   }
   tst_coeficient
 }
 
-
 Output_PA <- list()
 Output <- list()
 for (i in 1:4) {
-Output_PA[[i]]<- CCA_Env_Track(communnity_dataset =ALP_list_com_PA[[i]] ,environmental_dataset =ALP_list_env[[i]])
+Output_PA[[i]]<- CCA_Env_Track_PA(communnity_dataset =ALP_list_com_PA[[i]] ,environmental_dataset =ALP_list_env[[i]])
 Output[[i]] <- CCA_Env_Track(communnity_dataset =ALP_list_com[[i]] ,environmental_dataset =ALP_list_env[[i]])  
 }
 
+library(corrmorant)
 corplots_output <- list()
 for (w in 1:4) {
       a <- cbind(Output_PA[[w]],Output[[w]])
@@ -520,12 +530,62 @@ for (w in 1:4) {
         scale_color_corr(aesthetics = c("fill", "color"))
 }
     
-  grid.newpage()
-    png(filename = "Corplots_Env_Track.png" ,width=8000,height=4000,units="px",res=400)
-    grid.arrange(corplots_output[[1]],corplots_output[[2]],
-                 corplots_output[[3]],corplots_output[[4]],
-                 ncol = 2, nrow=2)
-    dev.off()
+grid.arrange(corplots_output[[1]],corplots_output[[2]],
+             corplots_output[[3]],corplots_output[[4]],
+             ncol = 2, nrow=2)
+
+CCA_Env_Track_combined <- function(communnity_dataset,environmental_dataset){
+  # Calculate the CCA with the community data and the environmental and the corresponding distance
+  # P/A - Jaccard distance
+  cca1<-cca(communnity_dataset~environmental_dataset)
+  
+  # Fitteds - we predict according to the model where our samples should be
+  fitteds <- fitted(cca1, model="CCA", type= "response")
+  
+  tst_coeficient_quant <- c()# Output to drop the coefficients
+
+  require(pscl)
+  # Calculate the CCA with the community data and the environmental and the corresponding distance
+  # P/A - Jaccard distance
+  cca1<-cca(communnity_dataset~environmental_dataset)
+  
+  # Fitteds - we predict according to the model where our samples should be
+  fitteds <- fitted(cca1, model="CCA", type= "response")
+  
+  tst_coeficient_PA <- c()# Output to drop the coefficients
+  # Correlation between predicted and observed values
+  for (e in 1:nrow(communnity_dataset)) {
+    model <- glm(as.numeric(communnity_dataset[e,])~fitteds[e,],family = "binomial")
+    new_dat <- data.frame(hp=seq(min(fitteds[e,]), max(fitteds[e,]),len=52))
+    new_dat$vs <-  predict(model, newdata=new_dat, type="response")
+    
+    plot(as.numeric(communnity_dataset[e,]),fitteds[e,], col="red4")
+    lines(new_dat$vs~new_dat$hp, col="green4", lwd=2)
+  } 
+}
+ par(mfrow=c(6,10))
+ CCA_Env_Track_combined(ALP_list_com_PA[[4]] , ALP_list_env[[4]])
+
+ communnity_dataset=ALP_list_com_PA[[4]]
+ environmental_dataset=ALP_list_env[[4]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

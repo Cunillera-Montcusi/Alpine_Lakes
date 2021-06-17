@@ -1,7 +1,7 @@
 Network,Variable,Intercept,Std.Err.,t-value,p-value,Smooth F-value,Smooth p-value,Adj R-sqr,Expl.Deviance
-600 km,NMDS X,0,0,98.77,0,3.16,0.18,0.06,0.1
-300 km,NMDS X,0,0,111.44,0,0,0.64,0,0
-100 km,NMDS X,0,0,45.88,0,0,0.54,0,0
-60 km,NMDS X,0.85,0.02,55.17,0,6.75,0.07,0.12,0.18
-6 km,NMDS X,0.75,0.02,36.12,0,0,0.6,0,0
-Fluvial,NMDS X,1,0,8292.15,0,8.01,0.04,0.14,0.2
+600 km,NMDS X,0,0,95.73,0,0,0.65,0,0
+300 km,NMDS X,0,0,111.44,0,0,0.79,0,0
+100 km,NMDS X,0,0,45.88,0,0,0.65,0,0
+60 km,NMDS X,0.76,0.02,30.71,0,0,0.41,0,0
+6 km,NMDS X,0.76,0.02,34.15,0,0,0.63,0,0
+Fluvial,NMDS X,0.99,0,2486.2,0,0,0.96,0,0

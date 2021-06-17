@@ -436,33 +436,6 @@ Lakes_buffer <- function(EU_lakes, Samp_lakes, buffer_distance, check_EU_Sampl_p
   function_result <- list(dat_corr,dist_lakes)
 }
 
-#
-#
-# TOPOGRÀFIC DISTANCES TRIES
-#
-#library(raster)
-#library(topoDistance)
-#
-#a <- c('C:/Users/Cunilleramontcusi/Desktop/GIS - Alpine/dem_suiss.tif')
-#
-#template <- raster(a)
-#
-#plot(template)
-#
-#pitit <- matrix(ncol = 2, byrow = TRUE,
-#                c(as.numeric(dat1[42,1:2]),
-#                  as.numeric(dat1[6,1:2]),
-#                  as.numeric(dat1[54,1:2])
-#                  ))
-#
-#tdist <- topoDist(template$dem_suiss, pitit, paths = TRUE)
-#
-#topoPathMap(template$test_reproj, pitit, 
-#            topoPaths = tdist, type = "hillshade",
-#            pathWidth = 4, cex = 2, bg = "blue")
-#
-#
-#
 
 #________________________________________#
 # Maxmimum distance between lakes -- 600 km approximately
@@ -728,16 +701,15 @@ for (i in 1:length(MAPS_xarxes)) {
   if(components(Xarx_grpah)$no>1){
     # Closenness
     a <- which(components(Xarx_grpah)$membership==1)
-    network_data[[i]][a,1]<- network_data[[1]][a,1]/max(network_data[[1]][a,1])
     b <- which(components(Xarx_grpah)$membership==2)
-    network_data[[i]][b,1] <- network_data[[1]][b,1]/max(network_data[[1]][b,1])
     
-    # Betweenness
-    a <- which(components(Xarx_grpah)$membership==1)
-    network_data[[i]][a,3]<- network_data[[1]][a,3]/max(network_data[[1]][a,3])
-    b <- which(components(Xarx_grpah)$membership==2)
-    network_data[[i]][b,3] <- network_data[[1]][b,3]/max(network_data[[1]][b,3])
+    Xarx_grpah <- graph.adjacency(MAPS_xarxes[[i]][a,a], mode = "undirected",diag = F)
+    network_data[[i]][a,1] <- closeness(Xarx_grpah, mode = "all")/max(closeness(Xarx_grpah, mode = "all"))
+   
+    Xarx_grpah <- graph.adjacency(MAPS_xarxes[[i]][b,b], mode = "undirected",diag = F)
+    network_data[[i]][b,1] <- closeness(Xarx_grpah, mode = "all")/max(closeness(Xarx_grpah, mode = "all"))
   }
+
   colnames(network_data[[i]]) <- c("clo_ALPS","deg_ALPS","bet_ALPS")
 }
 
@@ -752,16 +724,20 @@ fluvial_network_data[[1]][,1] <- closeness(GRAPH_xarxes_fluvial[[1]], mode = "ou
 fluvial_network_data[[1]][,2] <- degree(GRAPH_xarxes_fluvial[[1]],mode = "out")
 fluvial_network_data[[1]][,3] <- betweenness(GRAPH_xarxes_fluvial[[1]])
 
+a <- which(components(GRAPH_xarxes_fluvial[[1]])$membership==1)
+b <- which(components(GRAPH_xarxes_fluvial[[1]])$membership==2)
+
+Basins_Euro <- decompose.graph(GRAPH_xarxes_fluvial[[1]])
+
+a_clos <- closeness(Basins_Euro[[1]], mode = "out")
+b_clos <- closeness(Basins_Euro[[2]], mode = "out")
+
+fluvial_network_data[[1]][a,1]<- a_clos/max(a_clos)
+fluvial_network_data[[1]][b,1]<- b_clos/max(b_clos)
+
 colnames(fluvial_network_data[[1]]) <- c("clo_ALPS","deg_ALPS","bet_ALPS")
 
-#Homogeneizing dataset according to catchments
-#Closeness
-a <- which(ConComp$membership==1)
-fluvial_network_data[[1]][a,1]<- fluvial_network_data[[1]][a,1]/max(fluvial_network_data[[1]][a,1])
-b <- which(ConComp$membership==2)
-fluvial_network_data[[1]][b,1] <- fluvial_network_data[[1]][b,1]/max(fluvial_network_data[[1]][b,1])
 
-# PCA and plots
 
 library(ggfortify)
 PCA_network_results <- list()
@@ -770,9 +746,11 @@ for (r in 1:length(network_data)) {
   PCA_result <- prcomp(network_data[[r]], center = T, scale. = T)
   PCA_network_plot[[r]] <- PCA_result
   PCA_network_results[[r]] <-network_data[[r]][,1] #PCA_result$x[,1]
+  hist(PCA_network_results[[r]])
 }
-names(PCA_network_results) <- c("max_PCA_network","mid_PCA_network","mid_mid_PCA_network",
-                                "small_PCA_network","min_PCA_network")
+
+names(PCA_network_results) <- c("600 km","300 km"," 100 km",
+                                "60 km","6 km")
 
 #grid.arrange(autoplot(PCA_network_plot[[1]],loadings=T, loadings.label = TRUE, loadings.label.size = 5, shape = FALSE, label=F,
 #                      loadings.colour = 'red', loadings.label.colour="black")+
@@ -841,6 +819,7 @@ PCA_fluvial_network_plot<- list()
 PCA_fluvial_result <- prcomp(fluvial_network_data[[1]], center = T, scale. = T)
 PCA_fluvial_network_plot[[1]] <- PCA_fluvial_result
 PCA_fluvial_network_results[[1]] <-fluvial_network_data[[1]][,1]
+hist(PCA_fluvial_network_results[[1]])
 
 names(PCA_fluvial_network_results) <- c("PCA_fluvial_network")
 
@@ -855,12 +834,14 @@ cols[unlist(res.nv[[3]])[correspondence_BASINS]] <- "red"
 cols <- ifelse(cols==1, "green",ifelse(cols==2,"blue","red"))
 sizes <- ifelse(cols=="red",3,0.6)
 
-rbPal <- viridis_pal(1,0,1)
+rbPal <- viridis_pal(alpha = 1,begin = 0,end = 1)
 #Plots closeness "all"
 # Relevant that "png" output size will be big (nice arrows plotted)
 #This adds a column of color values based on the y values
 Col <- rbPal(length(fluvial_network_data[[1]][,1]))[as.numeric(cut(fluvial_network_data[[1]][,1],breaks = length(fluvial_network_data[[1]][,1])))]
 Col[which(cols=="red")] <- "red"
+detach("package:sna", unload = TRUE)
+library(igraph)
 png(filename = "C:/Users/Cunilleramontcusi/Alpine_fluvial_CLOS.png", width = 20000, height = 20000, res=500)
 par(mar=c(0,0,0,0))
 plot(GRAPH_xarxes_fluvial[[1]], vertex.label = NA, vertex.size = sizes, vertex.size2 = sizes, vertex.color=Col,
@@ -1132,7 +1113,7 @@ for (groups in 1:5) {
           the_plot<-
           ggplot(my_data, aes(x = X2, y = X1)) +
           geom_jitter(alpha=0.2, shape=21, size=3, colour="black", aes(fill=X2))+
-          scale_fill_continuous(type = "viridis")+
+          scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
           geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
           labs(title=colnames(dataset)[var+1], subtitle = paste("R2=", round(output_results[[var]][[10]],2),
                                                                 "ED=",round(output_results[[var]][[14]],2)))+
@@ -1153,7 +1134,7 @@ for (groups in 1:5) {
         the_plot<-
           ggplot(my_data, aes(x = X2, y = X1)) +
           geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
-          scale_fill_continuous(type = "viridis")+
+          scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
           geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
           labs(title=colnames(dataset)[var+1],subtitle = paste("R2=", round(output_results[[var]][[10]],2),
                                                                "ED=",round(output_results[[var]][[14]],2)))+
@@ -1172,12 +1153,12 @@ for (groups in 1:5) {
     GAM_model_resutls[[net]] <-output_results
     GAM_direct_model[[net]]<- output_model_results
     
-    png(filename =paste("C:/Users/Cunilleramontcusi/","GAM_Divers",biod_names[[groups]],"_",names(PCA_network_results)[[net]],".png"),
+    png(filename =paste("C:/Users/Cunilleramontcusi/","GAM_Divers",biod_names[[groups]],"_",Names_Networks[[net]],".png"),
         width =582*4 ,height =629*4 ,units ="px",res = 300)
     grid.arrange(plots_grups[[1]],plots_grups[[2]],
                  plots_grups[[3]],plots_grups[[4]],
                  plots_grups[[5]],
-                 ncol=2,nrow=3, top=names(PCA_network_results)[[net]])
+                 ncol=2,nrow=3, top=Names_Networks[[net]])
     dev.off()
   }
   GAMmodel_resutls_total[[groups]] <- GAM_model_resutls
@@ -1329,7 +1310,7 @@ for (groups in 1:5) {
      the_plot <- 
         ggplot(my_data, aes(x = X2, y = X1)) +
         geom_jitter(alpha=0.2, shape=21, size=3, colour="black", aes(fill=X2))+
-        scale_fill_continuous(type = "viridis")+
+        scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=2, size=2)+
         labs(title=colnames(dataset)[var+1],subtitle = paste("R2=", round(output_results[[var]][[10]],2),
                                                              "ED=",round(output_results[[var]][[14]],2)))+
@@ -1349,7 +1330,7 @@ for (groups in 1:5) {
       the_plot <- 
         ggplot(my_data, aes(x = X2, y = X1)) +
         geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
-        scale_fill_continuous(type = "viridis")+
+        scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
         labs(title=colnames(dataset)[var+1],subtitle =paste("R2=", round(output_results[[var]][[10]],2),
                                                             "ED=",round(output_results[[var]][[14]],2)))+
@@ -1378,7 +1359,7 @@ for (groups in 1:5) {
 
 
 
-# GAM models result in table format - Supplementary like____________________________________####
+# GAM models result in table format - Supplementary like___________________________________ ####
 biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
 Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
 
@@ -1567,12 +1548,12 @@ for (groups in 1:5) {
          the_plot <-
           ggplot(my_data, aes(x = X2, y = X1)) +
           geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
-          scale_fill_continuous(type = "viridis")+
+          scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
           geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
           labs(title=paste(Names_Networks[[net]],colnames(dataset)[select_p.val[var]+1]),
                subtitle = paste("R2=", round(r_sqr[select_p.val[var]],2),
                                 "ED=",round(dev_expl[select_p.val[var]],2)))+
-          ylab(colnames(dataset)[var+1])+xlab("Centrality-Isolation")+
+          ylab(colnames(dataset)[select_p.val[var]+1])+xlab("Centrality-Isolation")+
           theme_classic()+
           theme(panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)),
                 legend.position = "none") 
@@ -1730,7 +1711,7 @@ for (groups in 1:5) {
       
        the_plot <-ggplot(my_data, aes(x = X2, y = X1)) +
         geom_jitter(alpha=0.9, shape=21, size=3, colour="black", aes(fill=X2))+
-        scale_fill_continuous(type = "viridis")+
+        scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",linetype=1, size=2)+
         labs(title=paste("Fluvial",colnames(dataset)[select_p.val[var]+1]),
                          subtitle = paste("R2=", round(r_sqr[select_p.val[var]],2),
@@ -1759,8 +1740,8 @@ for(d in c(length(GAM_Sign_plots_total)+1):c(length(GAM_Sign_plots_total)+length
 # Printing for Env_Tracking
 png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_EnvTrack.png",
     width =582*4 ,height =629*2 ,units ="px",res = 300)
-grid.arrange(plot_plot_sign_plot[[1]],plot_plot_sign_plot[[2]],
-             ncol=2,nrow=1, top="Community Assembly (environmental tracking)")
+grid.arrange(plot_plot_sign_plot[[1]],plot_plot_sign_plot[[2]],plot_plot_sign_plot[[11]],
+             ncol=3,nrow=1, top="Community Assembly (environmental tracking)")
 dev.off()
 
 length(plot_plot_sign_plot)
@@ -1769,10 +1750,9 @@ length(plot_plot_sign_plot)
 png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_Diverse.png",
     width =629*6 ,height =629*6 ,units ="px",res = 300)
 grid.arrange(plot_plot_sign_plot[[3]],plot_plot_sign_plot[[4]],plot_plot_sign_plot[[5]], plot_plot_sign_plot[[6]],
-             plot_plot_sign_plot[[14]],plot_plot_sign_plot[[7]],plot_plot_sign_plot[[8]],plot_plot_sign_plot[[9]],
-             plot_plot_sign_plot[[10]],plot_plot_sign_plot[[11]],plot_plot_sign_plot[[12]],
-             plot_plot_sign_plot[[13]],
-             ncol=3,nrow=4, top="Community Diversity (alpha & beta)")
+             plot_plot_sign_plot[[7]],plot_plot_sign_plot[[8]],plot_plot_sign_plot[[9]],
+             plot_plot_sign_plot[[10]],
+             ncol=3,nrow=3, top="Community Diversity (alpha & beta)")
 dev.off()
 
 
@@ -1794,14 +1774,20 @@ for (groups in 1:5) {
 coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
 centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
 
-spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
-spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+#spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
+#spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+#
+#x <- spe.abu.MDS$points[,1]
+#y <- spe.abu.MDS$points[,2]
 
-x <- spe.abu.MDS$points[,1]
-y <- spe.abu.MDS$points[,2]
+dbRDA <- capscale(comm_data[[groups]]~env_data[[groups]][,4]+env_data[[groups]][,5]+env_data[[groups]][,6]+env_data[[groups]][,7]+env_data[[groups]][,8],
+                  distance = "jaccard",add = "lingoes")
+
+x<- dbRDA$CA$u[,1]
+y <- dbRDA$CA$u[,2]
 
 dataset <- data.frame(x,y,centr_iso)
-NMDS_model <- ordisurf(spe.abu.MDS ~ dataset[,3], plot = F,)
+NMDS_model <- ordisurf(dbRDA$CA$u ~ dataset[,3], plot = F,)
 NMDS_model_results <- summary(NMDS_model)
 
 plots_NMDS_model_result[[net]] <- NMDS_model_results
@@ -1823,7 +1809,7 @@ contour.vals <- extract.xyz(obj = NMDS_model)
                   #manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
                   scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
                   labs(title = paste(biod_names[groups], net_names[net]),
-                       subtitle = paste("Strs=",round(spe.abu.MDS$stress,2), 
+                       subtitle = paste("Unc. Inert.=",round(dbRDA$CA$tot.chi*1/dbRDA$tot.chi,2), 
                                         "R2=", round(NMDS_model_results$r.sq,2),
                                         "ED=",round(NMDS_model_results$dev.expl,2)))+
                   xlab("NMDS1")+ylab("NMDS2")+
@@ -1850,14 +1836,20 @@ for (groups in 1:5) {
     coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
     centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
     
-    spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
-    spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+   # spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
+   # spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+   # 
+   # x <- spe.abu.MDS$points[,1]
+   # y <- spe.abu.MDS$points[,2]
     
-    x <- spe.abu.MDS$points[,1]
-    y <- spe.abu.MDS$points[,2]
+    dbRDA <- capscale(comm_data[[groups]]~env_data[[groups]][,4]+env_data[[groups]][,5]+env_data[[groups]][,6]+env_data[[groups]][,7]+env_data[[groups]][,8],
+                      distance = "jaccard",add = "lingoes")
+    
+    x<- dbRDA$CA$u[,1]
+    y <- dbRDA$CA$u[,2]
     
     dataset <- data.frame(x,y,centr_iso)
-    NMDS_model <- ordisurf(spe.abu.MDS ~ dataset[,3], plot = F)
+    NMDS_model <- ordisurf(dbRDA$CA$u ~ dataset[,3], plot = F)
     NMDS_model_results <- summary(NMDS_model)
     
     plots_NMDS_fluvial_model_result[[groups]] <- NMDS_model_results
@@ -1875,9 +1867,9 @@ for (groups in 1:5) {
       geom_jitter(shape=21, size=5, alpha=0.8, aes(fill=centr_iso))+
       geom_contour(data=contour.vals, aes(x, y, z = z, colour = ..level..))+
       scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
-      scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
+      scale_fill_viridis(alpha = 1,begin =1 ,end = 0)+
       labs(title = paste(biod_names[groups], net_names[net]),
-           subtitle = paste("Strs=",round(spe.abu.MDS$stress,2), 
+           subtitle = paste("Unc. Inert.=",round(dbRDA$CA$tot.chi*1/dbRDA$tot.chi,2), 
                             "R2=", round(NMDS_model_results$r.sq,2),
                             "ED=",round(NMDS_model_results$dev.expl,2)))+
       xlab("NMDS1")+ylab("NMDS2")+
@@ -1928,14 +1920,20 @@ for (groups in 1:5) {
     coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
     centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
     
-    spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
-    spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+   # spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
+   # spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+   # 
+   # x <- spe.abu.MDS$points[,1]
+   # y <- spe.abu.MDS$points[,2]
     
-    x <- spe.abu.MDS$points[,1]
-    y <- spe.abu.MDS$points[,2]
+    dbRDA <- capscale(comm_data[[groups]]~env_data[[groups]][,4]+env_data[[groups]][,5]+env_data[[groups]][,6]+env_data[[groups]][,7]+env_data[[groups]][,8],
+                      distance = "jaccard",add = "lingoes")
+    
+    x<- dbRDA$CA$u[,1]
+    y <- dbRDA$CA$u[,2]
     
     dataset <- data.frame(x,y,centr_iso)
-    NMDS_model <- ordisurf(spe.abu.MDS ~ dataset[,3], plot = F)
+    NMDS_model <- ordisurf(dbRDA$CA$u ~ dataset[,3], plot = F)
     NMDS_model_results <- summary(NMDS_model)
     
     plots_NMDS_model_pval <- NMDS_model_results$s.pv
@@ -1959,7 +1957,7 @@ for (groups in 1:5) {
       scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
       scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
       labs(title = paste(biod_names[groups], net_names[net]),
-           subtitle = paste("Strs=",round(spe.abu.MDS$stress,2), 
+           subtitle = paste("Unc. Inert.=",round(dbRDA$CA$tot.chi*1/dbRDA$tot.chi,2), 
                             "R2=", round(NMDS_model_results$r.sq,2),
                             "ED=",round(NMDS_model_results$dev.expl,2)))+
       xlab("NMDS1")+ylab("NMDS2")+
@@ -1985,14 +1983,20 @@ for (groups in 1:5) {
   coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
   centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
   
-  spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
-  spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+ # spe.abu.jac<-vegdist(comm_data[[groups]],method = "jaccard") #Càlcul de la matriu de similitud amb Bray-Curtis
+ # spe.abu.MDS<-metaMDS(spe.abu.jac, distance="jaccard", k=2, try = 999) #MDS amb similitud bray-curtis
+ # 
+ # x <- spe.abu.MDS$points[,1]
+ # y <- spe.abu.MDS$points[,2]
   
-  x <- spe.abu.MDS$points[,1]
-  y <- spe.abu.MDS$points[,2]
+  dbRDA <- capscale(comm_data[[groups]]~env_data[[groups]][,4]+env_data[[groups]][,5]+env_data[[groups]][,6]+env_data[[groups]][,7]+env_data[[groups]][,8],
+                    distance = "jaccard",add = "lingoes")
+  
+  x<- dbRDA$CA$u[,1]
+  y <- dbRDA$CA$u[,2]
   
   dataset <- data.frame(x,y,centr_iso)
-  NMDS_model <- ordisurf(spe.abu.MDS ~ dataset[,3], plot = F)
+  NMDS_model <- ordisurf(dbRDA$CA$u ~ dataset[,3], plot = F)
   NMDS_model_results <- summary(NMDS_model)
   
   plots_NMDS_model_pval <- NMDS_model_results$s.pv
@@ -2017,7 +2021,7 @@ for (groups in 1:5) {
     #manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
     scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
     labs(title = paste(biod_names[groups], "Fluvial"),
-         subtitle = paste("Strs=",round(spe.abu.MDS$stress,2), 
+         subtitle = paste("Unc. Inert.=",round(dbRDA$CA$tot.chi*1/dbRDA$tot.chi,2), 
                           "R2=", round(NMDS_model_results$r.sq,2),
                           "ED=",round(NMDS_model_results$dev.expl,2)))+
     xlab("NMDS1")+ylab("NMDS2")+
@@ -2033,16 +2037,15 @@ plots_NMDS_fluvial_sign
 }
 
 png(filename ="C:/Users/Cunilleramontcusi/NMDS_Diverse_Sign.png",
-    width =629*8 ,height =629*8 ,units ="px",res = 300)
+    width =600*8 ,height =629*8 ,units ="px",res = 300)
 grid.arrange(plots_NMDS_sign[[1]],plots_NMDS_sign[[2]],plots_NMDS_sign[[3]],plots_NMDS_sign[[4]],
-             plots_NMDS_fluvial_sign[[1]],
-             plots_NMDS_fluvial_sign[[2]],
-             plots_NMDS_sign[[5]],plots_NMDS_sign[[6]],plots_NMDS_sign[[7]],plots_NMDS_fluvial_sign[[3]],
-             plots_NMDS_sign[[8]],plots_NMDS_sign[[9]],plots_NMDS_fluvial_sign[[4]],
-             ncol=4,nrow=4, top="Community Composition (NMDS SS)")
+             plots_NMDS_sign[[5]],plots_NMDS_sign[[6]],plots_NMDS_sign[[7]],
+             plots_NMDS_sign[[8]],plots_NMDS_sign[[9]],plots_NMDS_sign[[10]],
+             plots_NMDS_sign[[11]],
+             ncol=3,nrow=4, top="Community Composition (NMDS SS)")
 dev.off()
 
-# GAM NMDS models result in table format - Supplementary like_______________________________####
+# GAM NMDS models result in table format - Supplementary like______________________________ ####
 biod_names <- c("S16","S18","phy","zoo", "zoo.18S")
 Names_Networks <- c("600 km", "300 km","100 km","60 km","6 km", "Fluvial")
 
@@ -2183,6 +2186,366 @@ dev.off()
 
 
 
+# Summary plot CORRELATION ________________________________________________________________ ####
+
+# For Euclidean network
+p.val_netw <- list()
+r.value_netw <- list()
+
+p.val_groups <- list()
+r.value_groups <- list()
+
+for (groups in 1:5) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  for (net in 1:5) {
+    coin <- PCA_network_results[[net]][c(length(PCA_network_results[[net]])-54):length(PCA_network_results[[net]])]
+    dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                     biod[[groups]][,1:5])
+    colnames(dataset)[1] <-c("Network")
+    
+    p.val <- c()
+    r.value <- c()
+    
+    #CCA ___________________________________________________________________________________________
+    p.val[[1]] <-cor.test(dataset[,2],dataset[,1],method = "pearson")[3]
+    r.value[[1]] <-cor.test(dataset[,2],dataset[,1],method = "pearson")[4]
+    
+    #Richness ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,3],Sel_vari) 
+    colnames(Model_RF)[1] <- "Rich"
+    RF_output <- rfsrc(Rich ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,3]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,3] <- resid_values
+    p.val[[2]] <-cor.test(dataset[,3],dataset[,1],method = "pearson")[3]
+    r.value[[2]] <-cor.test(dataset[,3],dataset[,1],method = "pearson")[4]
+    
+    #LCBD ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,4],Sel_vari) 
+    colnames(Model_RF)[1] <- "LCBD"
+    RF_output <- rfsrc(LCBD ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,4]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,4] <- resid_values
+    p.val[[3]] <-cor.test(dataset[,4],dataset[,1],method = "pearson")[3]
+    r.value[[3]] <-cor.test(dataset[,4],dataset[,1],method = "pearson")[4]
+    
+    #Turn ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,5],Sel_vari) 
+    colnames(Model_RF)[1] <- "Turn"
+    RF_output <- rfsrc(Turn ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,5]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,5] <- resid_values
+    p.val[[4]] <-cor.test(dataset[,5],dataset[,1],method = "pearson")[3]
+    r.value[[4]] <-cor.test(dataset[,5],dataset[,1],method = "pearson")[4]
+    
+    #RichDiff ___________________________________________________________________________________________
+    # Variance Inflation Factor
+    vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+    Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+    # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+    Model_RF = cbind(dataset[,6],Sel_vari) 
+    colnames(Model_RF)[1] <- "RichDiff"
+    RF_output <- rfsrc(RichDiff ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+    # Checking plots (not necessary to run every time)
+    #S.rf.vimp <- gg_vimp (S.rf)
+    #S.rf.vimp
+    #plot (S.rf.vimp) #plot variable importance
+    out_selected_vari <- var.select(RF_output,conservative = "low")
+    env_selected_var <- c()
+    for (u in 1:length(out_selected_vari$topvars)) {
+      env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+    }
+    env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+    model <- lm(dataset[,6]~env_data_model[,1:length(ncol(env_data_model))])
+    summary(model)
+    resid_values <- model$residuals
+    dataset[,6] <- resid_values
+    p.val[[5]] <-cor.test(dataset[,6],dataset[,1],method = "pearson")[3]
+    r.value[[5]] <-cor.test(dataset[,6],dataset[,1],method = "pearson")[4]
+    
+    p.val_netw[[net]] <- p.val
+    r.value_netw[[net]] <- r.value
+  }
+  p.val_groups[[groups]] <- p.val_netw
+  r.value_groups[[groups]] <- r.value_netw
+}
+
+p.val_groups_flu <- list()
+r.value_groups_flu <- list()
+for (groups in 1:5) {
+  color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+  coin <- PCA_fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
+  dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
+                   biod[[groups]][,1:5])
+  colnames(dataset)[1] <-c("Network")
+  
+  p.val <- c()
+  r.value <- c()
+  
+  #CCA ___________________________________________________________________________________________
+  p.val[[1]] <-cor.test(dataset[,2],dataset[,1],method = "pearson")[3]
+  r.value[[1]] <-cor.test(dataset[,2],dataset[,1],method = "pearson")[4]
+  
+  #Richness ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,3],Sel_vari) 
+  colnames(Model_RF)[1] <- "Rich"
+  RF_output <- rfsrc(Rich ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,3]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,3] <- resid_values
+  p.val[[2]] <-cor.test(dataset[,3],dataset[,1],method = "pearson")[3]
+  r.value[[2]] <-cor.test(dataset[,3],dataset[,1],method = "pearson")[4]
+  
+  #LCBD ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,4],Sel_vari) 
+  colnames(Model_RF)[1] <- "LCBD"
+  RF_output <- rfsrc(LCBD ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,4]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,4] <- resid_values
+  p.val[[3]] <-cor.test(dataset[,4],dataset[,1],method = "pearson")[3]
+  r.value[[3]] <-cor.test(dataset[,4],dataset[,1],method = "pearson")[4]
+  
+  #Turn ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,5],Sel_vari) 
+  colnames(Model_RF)[1] <- "Turn"
+  RF_output <- rfsrc(Turn ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,5]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,5] <- resid_values
+  p.val[[4]] <-cor.test(dataset[,5],dataset[,1],method = "pearson")[3]
+  r.value[[4]] <-cor.test(dataset[,5],dataset[,1],method = "pearson")[4]
+  
+  #RichDiff ___________________________________________________________________________________________
+  # Variance Inflation Factor
+  vif_value <- vifstep (env_data[[groups]][,4:8], th=7) # threshold set to VIF<7
+  Sel_vari <- exclude(env_data[[groups]][,4:8], vif_value)
+  # Random Forest (RF) - selection of most informative variables for each DIV metric + group
+  Model_RF = cbind(dataset[,6],Sel_vari) 
+  colnames(Model_RF)[1] <- "RichDiff"
+  RF_output <- rfsrc(RichDiff ~ ., mtry = 6, ntree = 1000, importance="permute", 	data = Model_RF) 
+  # Checking plots (not necessary to run every time)
+  #S.rf.vimp <- gg_vimp (S.rf)
+  #S.rf.vimp
+  #plot (S.rf.vimp) #plot variable importance
+  out_selected_vari <- var.select(RF_output,conservative = "low")
+  env_selected_var <- c()
+  for (u in 1:length(out_selected_vari$topvars)) {
+    env_selected_var[u] <- which(colnames(env_data[[groups]][,4:8])==out_selected_vari$topvars[u])  
+  }
+  env_data_model <- as.matrix(env_data[[groups]][,c(3+env_selected_var)])
+  model <- lm(dataset[,6]~env_data_model[,1:length(ncol(env_data_model))])
+  summary(model)
+  resid_values <- model$residuals
+  dataset[,6] <- resid_values
+  p.val[[5]] <-cor.test(dataset[,6],dataset[,1],method = "pearson")[3]
+  r.value[[5]] <-cor.test(dataset[,6],dataset[,1],method = "pearson")[4]
+  
+  p.val_groups_flu[[groups]] <- p.val_netw
+  r.value_groups_flu[[groups]] <- r.value_netw
+}
+  
+    Names_Variab <- c("Environmental tracking", "Species richness", "LCBD", "Replacement", "Richness difference","NMDS SS" )
+    plots_significance <- list()
+    for (variable in 1:5) {
+      
+      #R-squared
+      max_netw <- cbind(c(r.value_groups[[1]][[1]][[variable]], r.value_groups[[2]][[1]][[variable]], r.value_groups[[3]][[1]][[variable]], 
+                          r.value_groups[[4]][[1]][[variable]],r.value_groups[[5]][[1]][[variable]]),
+                        rep("600 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      mid_netw <- cbind(c(r.value_groups[[1]][[2]][[variable]], r.value_groups[[2]][[2]][[variable]], r.value_groups[[3]][[2]][[variable]], 
+                          r.value_groups[[4]][[2]][[variable]],r.value_groups[[5]][[2]][[variable]]),
+                        rep("300 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      mid_mid_netw <- cbind(c(r.value_groups[[1]][[3]][[variable]], r.value_groups[[2]][[3]][[variable]], r.value_groups[[3]][[3]][[variable]], 
+                              r.value_groups[[4]][[3]][[variable]],r.value_groups[[5]][[3]][[variable]]),
+                            rep("100 km", 5), 
+                            c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      small_netw <- cbind(c(r.value_groups[[1]][[4]][[variable]], r.value_groups[[2]][[4]][[variable]], r.value_groups[[3]][[4]][[variable]], 
+                            r.value_groups[[4]][[4]][[variable]],r.value_groups[[5]][[4]][[variable]]),
+                          rep("60 km", 5), 
+                          c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      min_netw <- cbind(c(r.value_groups[[1]][[5]][[variable]], r.value_groups[[2]][[5]][[variable]], r.value_groups[[3]][[5]][[variable]], 
+                          r.value_groups[[4]][[5]][[variable]],r.value_groups[[5]][[5]][[variable]]),
+                        rep("6 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      fluv_netw <- cbind(c(r.value_groups_flu[[1]][[variable]][[1]], r.value_groups_flu[[2]][[variable]][[2]], r.value_groups_flu[[3]][[variable]][[3]], 
+                           r.value_groups_flu[[4]][[variable]][[4]], r.value_groups_flu[[5]][[variable]][[5]]),
+                         rep("Fluvial", 5), 
+                         c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      # P-value
+      max_netw_Pval <- cbind(c(p.val_groups[[1]][[1]][[variable]], p.val_groups[[2]][[1]][[variable]], p.val_groups[[3]][[1]][[variable]], 
+                          p.val_groups[[4]][[1]][[variable]],p.val_groups[[5]][[1]][[variable]]),
+                        rep("600 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      mid_netw_Pval <- cbind(c(p.val_groups[[1]][[2]][[variable]], p.val_groups[[2]][[2]][[variable]], p.val_groups[[3]][[2]][[variable]], 
+                          p.val_groups[[4]][[2]][[variable]],p.val_groups[[5]][[2]][[variable]]),
+                        rep("300 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      mid_mid_netw_Pval <- cbind(c(p.val_groups[[1]][[3]][[variable]], p.val_groups[[2]][[3]][[variable]], p.val_groups[[3]][[3]][[variable]], 
+                              p.val_groups[[4]][[3]][[variable]],p.val_groups[[5]][[3]][[variable]]),
+                            rep("100 km", 5), 
+                            c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      small_netw_Pval <- cbind(c(p.val_groups[[1]][[4]][[variable]], p.val_groups[[2]][[4]][[variable]], p.val_groups[[3]][[4]][[variable]], 
+                            p.val_groups[[4]][[4]][[variable]],p.val_groups[[5]][[4]][[variable]]),
+                          rep("60 km", 5), 
+                          c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      min_netw_Pval <- cbind(c(p.val_groups[[1]][[5]][[variable]], p.val_groups[[2]][[5]][[variable]], p.val_groups[[3]][[5]][[variable]], 
+                          p.val_groups[[4]][[5]][[variable]],p.val_groups[[5]][[5]][[variable]]),
+                        rep("6 km", 5), 
+                        c("S16","S18","Phy","Zoo", "S18zoo"))
+      
+      fluv_netw_Pval <- cbind(c(p.val_groups_flu[[1]][[variable]][[1]], p.val_groups_flu[[2]][[variable]][[2]], p.val_groups_flu[[3]][[variable]][[3]], 
+                                p.val_groups_flu[[4]][[variable]][[4]], p.val_groups_flu[[5]][[variable]][[5]]),
+                         rep("Fluvial", 5), 
+                         c("S16","S18","Phy","Zoo", "S18zoo"))
+  
+      dataset_pval <- as.data.frame(cbind(rbind(max_netw,mid_netw,mid_mid_netw,small_netw,min_netw,fluv_netw),
+                                          rbind(max_netw_Pval,mid_netw_Pval,mid_mid_netw_Pval,small_netw_Pval,min_netw_Pval,fluv_netw_Pval)))
+      dataset_pval <- dataset_pval[,c(1,4,2,3)]
+      colnames(dataset_pval) <- c("Rsqr","pval","Network","Group")
+      dataset_pval$Rsqr <-as.numeric(dataset_pval$Rsqr)
+      dataset_pval$pval <-as.numeric(dataset_pval$pval)
+      dataset_pval$Network <- factor(dataset_pval$Network,
+                                     levels = c("600 km", "300 km","100 km","60 km","6 km", "Fluvial"))
+      dataset_pval$Group <- factor(dataset_pval$Group,
+                                   levels = c("S16","S18","Phy","Zoo", "S18zoo"))
+      significants <- rep("NoSign",5*6)
+      significants[which(dataset_pval$pval<0.05)]<- "Sign"
+      dataset_pval$Sign <- factor(significants) 
+      
+      color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
+      
+      plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(Rsqr)))+
+        geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
+        geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
+        scale_alpha_manual(values = c(0.2,0.9))+
+        scale_size_manual(values = c(2,6))+
+        scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
+                                   color_groups[4],color_groups[5],color_groups[6]))+
+        scale_y_continuous(limits=c(-1,1),
+                           breaks =c(-1,-0.8,-0.6,-0.4,-0.2,0.2,0.4,0.6,0.8,1) )+
+        geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
+        labs(title=Names_Variab[variable])+ylab("Corr. Coef.")+xlab("Network")+
+        theme_classic()
+    }
+    
+    png(filename =paste("C:/Users/Cunilleramontcusi/All_Correlation_Groups.png"),
+        width =900*5 ,height =700*5 ,units ="px",res = 400)
+    grid.arrange(plots_significance[[1]],plots_significance[[2]],
+                 plots_significance[[3]],plots_significance[[4]],
+                 plots_significance[[5]],
+                 ncol=2,nrow=3, top="Significance values")
+    dev.off()      
+  
+
+
+
+
+    
 ##########        END           ##########
 ##########                      ##########
 ##########################################
@@ -2281,7 +2644,7 @@ for (groups in 1:5) {
       plots_NMDS_x_sign[[ref_value_X]]<-ggplot(my_data, aes(x = X2, y = X1)) +
         geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
-        scale_fill_continuous(type = "viridis")+
+        scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
         labs(title = biod_names[groups], 
              subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
         xlab("Centrality-Isolation")+ylab("NMDS1")+
@@ -2303,7 +2666,7 @@ for (groups in 1:5) {
       plots_NMDS_y_sign[[ref_value_Y]] <- ggplot(my_data, aes(x = X2, y = X1)) +
         geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
         geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
-        scale_fill_continuous(type = "viridis")+
+        scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
         labs(title = biod_names[groups], 
              subtitle = paste(net_names[net]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
         xlab("Centrality-Isolation")+ylab("NMDS2")+
@@ -2351,7 +2714,7 @@ for (groups in 1:5) {
     plots_NMDS_x_fluvial_sign[[ref_value_X]] <-ggplot(my_data, aes(x = X2, y = X1)) +
       geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
       geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity",  colour="black",size=2,se = TRUE)+
-      scale_fill_continuous(type = "viridis")+
+      scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
       labs(title = biod_names[groups], 
            subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
       xlab("Centrality-Isolation")+ylab("NMDS1")+
@@ -2373,7 +2736,7 @@ for (groups in 1:5) {
     plots_NMDS_y_fluvial_sign[[ref_value_Y]] <- ggplot(my_data, aes(x = X2, y = X1)) +
       geom_jitter(alpha=0.8,shape=21, size=5, aes(fill=X2))+
       geom_smooth(aes(ymin = low, ymax = high, y = mu), stat = "identity", colour="black",size=2,se = T)+
-      scale_fill_continuous(type = "viridis")+
+      scale_fill_continuous(type = "viridis",  alpha = 1,begin = 1,end = 0)+
       labs(title = biod_names[groups], 
            subtitle = paste(net_names[6]," ", "Stress=",round(spe.abu.MDS$stress,2)))+
       xlab("Centrality-Isolation")+ylab("NMDS2")+

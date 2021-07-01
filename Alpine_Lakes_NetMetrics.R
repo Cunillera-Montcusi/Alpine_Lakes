@@ -793,7 +793,7 @@ for (e in 1:length(cordenades_xarxes)) {
   
   maps_Alps[[e]] <- ggplot(n, layout=as.matrix(cordenades_xarxes[[e]][,1:2]),
                            aes(x = x, y = y, xend = xend, yend = yend))+
-    geom_edges( color = "grey40", size=0.1, alpha=0.4) +
+    geom_edges( color = "white", size=0.1, alpha=0.4) +
     geom_nodes(aes(fill=CC_values,alpha=family, size=family, color=family) ,shape=21, alpha=.75)+
     scale_fill_viridis(discrete = F,alpha = 1,begin = 1,end = 0)+
     labs(x="",y="")+
@@ -804,11 +804,32 @@ for (e in 1:length(cordenades_xarxes)) {
     theme(axis.text = element_blank(),
           axis.ticks = element_blank(),
           legend.position = "none",
-          panel.background=element_rect(colour="black"))
+          panel.background=element_blank())
 }
 
 png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps.png",width =745 ,height =742 ,units ="px",res = 100)
 grid.arrange(maps_Alps[[1]],maps_Alps[[2]],maps_Alps[[3]],maps_Alps[[4]],maps_Alps[[5]])
+dev.off()
+
+
+png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps_max.png",width =600 ,height =500 ,units ="px",res = 200)
+grid.arrange(maps_Alps[[1]])
+dev.off()
+
+png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps_med.png",width =600 ,height =500 ,units ="px",res = 200)
+grid.arrange(maps_Alps[[2]])
+dev.off()
+
+png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps_med_med.png",width =600 ,height =500 ,units ="px",res = 200)
+grid.arrange(maps_Alps[[3]])
+dev.off()
+
+png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps_small.png",width =600 ,height =500 ,units ="px",res = 200)
+grid.arrange(maps_Alps[[4]])
+dev.off()
+
+png(filename ="C:/Users/Cunilleramontcusi/Network_maps_Alps_min.png",width =600 ,height =500 ,units ="px",res = 200)
+grid.arrange(maps_Alps[[5]])
 dev.off()
 
 
@@ -1739,7 +1760,7 @@ for(d in c(length(GAM_Sign_plots_total)+1):c(length(GAM_Sign_plots_total)+length
 
 # Printing for Env_Tracking
 png(filename ="C:/Users/Cunilleramontcusi/GAM_Sign_EnvTrack.png",
-    width =582*4 ,height =629*2 ,units ="px",res = 300)
+    width =582*6 ,height =629*2 ,units ="px",res = 300)
 grid.arrange(plot_plot_sign_plot[[1]],plot_plot_sign_plot[[2]],plot_plot_sign_plot[[11]],
              ncol=3,nrow=1, top="Community Assembly (environmental tracking)")
 dev.off()
@@ -2165,8 +2186,8 @@ for (variable in 1:6) {
   plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(val)))+
     geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
     geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
-    scale_alpha_manual(values = c(0.2,0.9))+
-    scale_size_manual(values = c(2,6))+
+    scale_alpha_manual(values = c(0.3,0.9))+
+    scale_size_manual(values = c(2,7))+
     scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
                                color_groups[4],color_groups[5],color_groups[6]))+
     scale_y_continuous(expand = c(0.2,0.01),
@@ -2522,8 +2543,8 @@ for (groups in 1:5) {
       plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(Rsqr)))+
         geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
         geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
-        scale_alpha_manual(values = c(0.2,0.9))+
-        scale_size_manual(values = c(2,6))+
+        scale_alpha_manual(values = c(0.3,0.9))+
+        scale_size_manual(values = c(6,7))+
         scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
                                    color_groups[4],color_groups[5],color_groups[6]))+
         scale_y_continuous(limits=c(-1,1),

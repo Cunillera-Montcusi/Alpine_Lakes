@@ -242,3 +242,5 @@ ALP_MID_xarxa <- ifelse(ALP_MID_xarxa>68732.87,0,1)
 
 cordenades_xarxes <-list(max_distance[[1]],mid_distance[[1]],mid_mid_distance[[1]], small_distance[[1]], min_distance[[1]]) 
 MAPS_xarxes <- list(ALP_MAX_xarxa, ALP_MID_xarxa, ALP_MID_MID_xarxa, ALP_SMALL_xarxa, ALP_MIN_xarxa)
+
+save.image("Database.RData")

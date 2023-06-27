@@ -129,3 +129,5 @@ png(filename = "Figures/AlpineLakes_scales.png",
     width = 5000, height = 5000, res=300)
 grid.arrange(lakes_loc_plot[[1]],lakes_loc_plot[[2]],lakes_loc_plot[[3]],lakes_loc_plot[[4]],lakes_loc_plot[[5]],lakes_loc_plot[[6]],ncol=2)
 dev.off()
+
+save.image("Database.RData")

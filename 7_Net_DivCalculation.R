@@ -71,7 +71,7 @@ for (histo in 1:5) {
 }
 
 coin <- Fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
-histo_list[[6]] <- ggplot(data.frame(y=fluvial_network_data[[1]][,1]))+
+histo_list[[6]] <- ggplot(data.frame(y=Fluvial_network_results[[1]]))+
   geom_histogram(aes(x=y), bins=10,colour="black",fill="grey60")+
   geom_vline(xintercept = coin, colour="black")+
   scale_y_continuous(expand = c(0,0))+theme_classic()+labs(x="Out-closeness", title = "Fluvial")

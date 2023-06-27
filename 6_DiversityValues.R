@@ -157,3 +157,4 @@ grid.arrange(
   grid.arrange(grobs = TOTAL_biod_plot[[5]], ncol = 4),
   nrow=5)
 dev.off()
+save.image("Database.RData")

@@ -104,7 +104,7 @@ names(Network_results) <- c("650 km","325 km"," 100 km","65 km","6.5 km")
 maps_Alps <- list()
 detach("package:igraph", unload = TRUE)
 library(sna)
-for (e in 1:(length(cordenades_xarxes))) {
+for (e in 1:(length(cordenades_xarxes)-1)) {
   factors <- rep("No_Sampled",nrow(MAPS_xarxes[[e]]))
   factors[c(nrow(MAPS_xarxes[[e]])-54):nrow(MAPS_xarxes[[e]])] <- "Sampled"
   CC_values <- Network_results[[e]]
@@ -162,7 +162,7 @@ dev.off()
 
 library(ggfortify)
 Fluvial_network_results <- list()
-Fluvial_network_results[[1]] <-fluvial_network_data[[1]][,1]
+Fluvial_network_results[[1]] <-log(fluvial_network_data[[1]][,4],10)
 names(Fluvial_network_results) <- c("Fluvial")
 
 #Plot centrality values in river network
@@ -175,9 +175,9 @@ rbPal <- viridis_pal(alpha = 1,direction = -1)
 #Plots closeness "all"
 # Relevant that "png" output size will be big (nice arrows plotted)
 #This adds a column of color values based on the y values
-Col <- rbPal(length(fluvial_network_data[[1]][,1]))[
-  as.numeric(cut(fluvial_network_data[[1]][,1],
-                 breaks = length(fluvial_network_data[[1]][,1])))]
+Col <- rbPal(length(Fluvial_network_results[[1]] ))[
+  as.numeric(cut(Fluvial_network_results[[1]] ,
+                 breaks = length(Fluvial_network_results[[1]] )))]
 Col[which(cols=="red")] <- "red"
 detach("package:sna", unload = TRUE)
 library(igraph)
@@ -221,3 +221,6 @@ rownames(out_netw_struc) <- c(names(Network_results), "Fluvial")
 out_netw_struc
 
 write.csv2(out_netw_struc, file = "Results_Tables/out_netw_struc.csv")
+
+save.image("Database.RData")
+

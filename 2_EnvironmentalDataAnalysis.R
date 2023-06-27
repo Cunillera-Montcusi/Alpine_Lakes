@@ -174,3 +174,5 @@ png(filename = "Figures/Env_Maps.png",
 grid.arrange(Env_maps_list[[4]],Env_maps_list[[5]],Env_maps_list[[6]],
              Env_maps_list[[7]],Env_maps_list[[8]])
 dev.off()
+
+save.image("Database.RData")

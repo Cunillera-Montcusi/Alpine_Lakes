@@ -841,7 +841,8 @@ grid.arrange(plot_plot_sign_plot[[1]],plot_plot_sign_plot[[2]],plot_plot_sign_pl
              plot_plot_sign_plot[[7]],plot_plot_sign_plot[[8]],plot_plot_sign_plot[[9]],
              plot_plot_sign_plot[[10]],plot_plot_sign_plot[[11]],plot_plot_sign_plot[[12]],
              plot_plot_sign_plot[[13]],plot_plot_sign_plot[[14]],
-             ncol=3,nrow=5, top="Community Diversity (alpha & beta)")
+             GAM_Sign_plots_total_Fluvial[[1]],GAM_Sign_plots_total_Fluvial[[2]],GAM_Sign_plots_total_Fluvial[[3]],
+             ncol=4,nrow=5, top="Community Diversity (alpha & beta)")
 dev.off()
 
 
@@ -1080,6 +1081,7 @@ grid.arrange(plots_NMDS_sign[[1]],plots_NMDS_sign[[2]],plots_NMDS_sign[[3]],plot
              plots_NMDS_sign[[5]],plots_NMDS_sign[[6]],plots_NMDS_sign[[7]],
              plots_NMDS_sign[[8]],plots_NMDS_sign[[9]],plots_NMDS_sign[[10]],
              plots_NMDS_sign[[11]],
+             plots_NMDS_fluvial_sign[[1]],plots_NMDS_fluvial_sign[[2]],plots_NMDS_fluvial_sign[[3]],
              ncol=5,nrow=3, top="Community Composition (NMDS SS)")
 dev.off()
 

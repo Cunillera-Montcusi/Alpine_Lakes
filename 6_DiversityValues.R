@@ -41,8 +41,11 @@ source("Alpine_Lakes_NetMetrics_functions.R")
 #________________________________________#
 
 #### Community indices list to gather everything 
-community_indices<- list()
 
+
+biod_group_packs<- list()
+for (group_packs in 1:2) {
+community_indices<- list()
 # ALPHA DIVERSITY
 # Richness
 tst_coeficient_out <- list()
@@ -63,9 +66,23 @@ library(adespatial)
 library(ade4)
 tst_coeficient_out <- list()
 for (r in 1:5) {
+  if (group_packs==2) {
+    Swiss <- as.vector(the_plot_db %>% filter(Longitude<10) %>% select(Lake_name))$Lake_name
+    ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
+    LCBD__Swiss <- beta.div(comm_data[[r]][rownames(comm_data[[r]])%in%Swiss,], method = "jaccard", nperm = 9999)
+   
+    Aust <- as.vector(the_plot_db %>% filter(Longitude>10) %>% select(Lake_name))$Lake_name
+    LCBD__Aust <- beta.div(comm_data[[r]][rownames(comm_data[[r]])%in%Aust,], method = "jaccard", nperm = 9999)
+    
+    LCBD_values <- c(LCBD__Swiss$LCBD,LCBD__Aust$LCBD)
+    LCBD_values[names(LCBD_values)[order(names(LCBD_values))]]
+  }else{  
   ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
   LCBD_values <- beta.div(comm_data[[r]], method = "jaccard", nperm = 9999)
-  tst_coeficient_out[[r]] <- LCBD_values$LCBD
+  LCBD_values <- LCBD_values$LCBD
+  }
+
+  tst_coeficient_out[[r]] <- LCBD_values
 }
 community_indices[[3]] <- tst_coeficient_out
 names(community_indices[[3]])<- c("LCBD_S16","LCBD_S18","LCBD_PHY","LCBD_ZOO","LCBD_18S.ZOO") 
@@ -73,11 +90,31 @@ names(community_indices[[3]])<- c("LCBD_S16","LCBD_S18","LCBD_PHY","LCBD_ZOO","L
 # Betadiversity components
 tst_coeficient_out <- list()
 for (r in 1:5) {
+  if (group_packs==2) {
+  Swiss <- as.vector(the_plot_db %>% filter(Longitude<10) %>% select(Lake_name))$Lake_name
+  ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
+  taxa.q_Ruziska_AB_Swiss <- beta.div.comp(comm_data[[r]][rownames(comm_data[[r]])%in%Swiss,], coef = "J", quant = FALSE)
+  replacemnet_Swiss <- apply(as.matrix(taxa.q_Ruziska_AB_Swiss$repl),1,mean)
+  rich_diff_Swiss <- apply(as.matrix(taxa.q_Ruziska_AB_Swiss$rich),1,mean)
+  beta_div_components_Swiss <- cbind(replacemnet_Swiss,rich_diff_Swiss)
+  
+  
+  Aust <- as.vector(the_plot_db %>% filter(Longitude>10) %>% select(Lake_name))$Lake_name
+  taxa.q_Ruziska_AB_Aust <- beta.div.comp(comm_data[[r]][rownames(comm_data[[r]])%in%Aust,], coef = "J", quant = FALSE)
+  replacemnet_Aust <- apply(as.matrix(taxa.q_Ruziska_AB_Aust$repl),1,mean)
+  rich_diff_Aust <- apply(as.matrix(taxa.q_Ruziska_AB_Aust$rich),1,mean)
+  beta_div_components_Aust <- cbind(replacemnet_Aust,rich_diff_Aust)
+  
+  beta_div_components <- rbind(beta_div_components_Swiss,beta_div_components_Aust)
+  beta_div_components <- beta_div_components[order(rownames(beta_div_components)),]
+  }else{  
   ### WARNING: CHANGE TO JACCARD IF WORKING WITH PA
   taxa.q_Ruziska_AB <- beta.div.comp(comm_data[[r]], coef = "J", quant = FALSE)
   replacemnet <- apply(as.matrix(taxa.q_Ruziska_AB$repl),1,mean)
   rich_diff <- apply(as.matrix(taxa.q_Ruziska_AB$rich),1,mean)
   beta_div_components <- cbind(replacemnet,rich_diff)
+  }
+  
   tst_coeficient_out[[r]] <- beta_div_components
 }
 
@@ -89,12 +126,15 @@ community_indices[[5]]<- list(tst_coeficient_out[[1]][,2],tst_coeficient_out[[2]
 names(community_indices[[5]])<- c("RicDif_S16","RicDif_S18","RicDif_PHY","RicDif_ZOO","RicDif_18S.ZOO") 
 
 biod <- list()
+
 for (r in 1:5) {
   biod[[r]] <- cbind(community_indices[[2]][[r]],community_indices[[3]][[r]],community_indices[[4]][[r]],community_indices[[5]][[r]])
   noms <-c(names(community_indices[[2]])[r],names(community_indices[[3]])[r],names(community_indices[[4]])[r],names(community_indices[[5]])[r]) 
   colnames(biod[[r]]) <- noms
 } 
-biod
+biod_group_packs[[group_packs]] <- biod
+
+} # Group_packs
 
 image_list <- list("s16_image.png", "s18_image.png","phy_image.png","zoo_image.png","zooS18_image.png")
 

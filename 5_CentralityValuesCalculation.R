@@ -69,7 +69,7 @@ for (i in 1:length(MAPS_xarxes)) {
 }
 
 # Flulvial
-detach("package:sna", unload = TRUE)
+#detach("package:sna", unload = TRUE)
 library(igraph)
 fluvial_network_data <- list()
 output <- matrix(nrow = length(igraph::V(GRAPH_xarxes_fluvial[[1]])), ncol = 4)
@@ -189,7 +189,7 @@ dev.off()
 
 
 # Print network structure results_______________________________________________
-detach("package:sna", unload = TRUE)
+#detach("package:sna", unload = TRUE)
 library(igraph)
 
 out_netw_struc <- matrix(nrow = 6, ncol = 8)

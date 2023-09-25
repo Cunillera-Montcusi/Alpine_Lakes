@@ -83,7 +83,7 @@ the_plot_db <-TOTAL_env_data %>%
   rowwise() %>% 
   mutate(Count=sum(A,B,C,D,E)) %>% ungroup()
 
-the_plot <- ggplot(data = world) +geom_sf()+
+the_plot <- ggplot(data = world) +geom_sf(fill="grey95")+
   coord_sf(xlim = c(min(TOTAL_env_data$Longitude)-1, 
                     max(TOTAL_env_data$Longitude)+1), 
            ylim = c(min(TOTAL_env_data$Latitude)-1,
@@ -92,7 +92,7 @@ the_plot <- ggplot(data = world) +geom_sf()+
   geom_point(data = the_plot_db, 
              aes(x = Longitude, y = Latitude,shape=as.factor(Count),fill =as.factor(Count)),size = 3, alpha=0.5)+
   scale_shape_manual(values = c(21,22,23,24,25))+
-  scale_fill_brewer(type = "qual",direction = -1)+
+  scale_fill_grey()+
   labs(title ="Sampled lakes",
        shape="Sampled groups in each lake",
        fill="Sampled groups in each lake")+
@@ -107,7 +107,7 @@ png(filename = "Figures/Sampl_Maps.png",
 grid.arrange(the_plot,ncol=1)
 dev.off()
 
-# Checking only the network of sampled lakes (not accounting with the lakes in between)
+  # Checking only the network of sampled lakes (not accounting with the lakes in between)
 dist.percol <- list()
 for (r in 1:4) {
   situacio <- env_data[[r]][,2:3]

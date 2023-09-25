@@ -192,6 +192,12 @@ ALP_SMALL_xarxa <- small_distance_down
 ALP_SMALL_xarxa[position_node_above10_SMALL,position_node_above10_SMALL] <- ifelse(ALP_SMALL_xarxa[position_node_above10_SMALL,position_node_above10_SMALL]>d.percol_FIRST,0,1)
 ALP_SMALL_xarxa[position_node_below10_SMALL,position_node_below10_SMALL] <- ifelse(ALP_SMALL_xarxa[position_node_below10_SMALL,position_node_below10_SMALL]>d.percol_SECOND,0,1)
 ALP_SMALL_xarxa <- ifelse(ALP_SMALL_xarxa>1,0,ALP_SMALL_xarxa)
+#ALP_SMALL_xarxa[c(12,54),c(12,54)] <- 1
+
+#as.data.frame(small_distance[[1]]) %>% 
+#ggplot()+geom_point(aes(lon,lat))+geom_label(aes(x=lon,y=lat,label=rownames(small_distance[[1]])))
+#which(rownames(small_distance[[1]])==202616)# 202616 is 12
+#which(rownames(small_distance[[1]])==352)# 352 is 54
 
 #________________________________________#
 # The smallest distance (minimum), basically individual lakes or nearby (almost touching) lakes -- 6km approximately
@@ -220,6 +226,13 @@ ALP_MIN_xarxa <- min_distance_down
 ALP_MIN_xarxa[position_node_above10_MIN,position_node_above10_MIN] <- ifelse(ALP_MIN_xarxa[position_node_above10_MIN,position_node_above10_MIN]>d.percol_FIRST,0,1)
 ALP_MIN_xarxa[position_node_below10_MIN,position_node_below10_MIN] <- ifelse(ALP_MIN_xarxa[position_node_below10_MIN,position_node_below10_MIN]>d.percol_SECOND,0,1)
 ALP_MIN_xarxa <- ifelse(ALP_MIN_xarxa>1,0,ALP_MIN_xarxa)
+#ALP_MIN_xarxa[c(4,15),c(4,15)] <- 1
+
+#as.data.frame(min_distance[[1]]) %>% 
+#ggplot()+geom_point(aes(lon,lat))+geom_label(aes(x=lon,y=lat,label=rownames(min_distance[[1]])))
+# Achense is 4
+# Greifensee is 15
+
 
 #________________________________________#
 # I already calculated the percolation distance for each network and already noted it in the following lines. 
@@ -240,7 +253,11 @@ ALP_MID_MID_xarxa <- ifelse(ALP_MID_MID_xarxa>72036.2,0,1)
 ALP_MID_xarxa <- mid_distance_down
 ALP_MID_xarxa <- ifelse(ALP_MID_xarxa>68732.87,0,1)
 
+
 cordenades_xarxes <-list(max_distance[[1]],mid_distance[[1]],mid_mid_distance[[1]], small_distance[[1]], min_distance[[1]]) 
 MAPS_xarxes <- list(ALP_MAX_xarxa, ALP_MID_xarxa, ALP_MID_MID_xarxa, ALP_SMALL_xarxa, ALP_MIN_xarxa)
 
 save.image("Database.RData") 
+
+
+

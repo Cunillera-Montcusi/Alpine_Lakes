@@ -96,6 +96,9 @@ GAM_direct_model_total <- list()
 for (groups in 1:5) {
   color_groups <- as.character(CUNILLERA_cols("yellow","blue","green","red","cyan"))
   for (net in 1:5) {
+    
+    if(net==4 | net==5){biod <- biod_group_packs[[2]]}else{biod <- biod_group_packs[[1]]} # We select which "subgraph" we use
+    
     coin <- Network_results[[net]][c(length(Network_results[[net]])-54):length(Network_results[[net]])]
     dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
                      biod[[groups]][,1:4])
@@ -286,6 +289,9 @@ GAMmodel_resutls_fluvial <- list()
 GAM_direct_model_fluvial<- list()
 
 for (groups in 1:5) {
+  
+  biod <- biod_group_packs[[2]]
+  
   color_groups <- as.character(CUNILLERA_cols("yellow","blue","green","red","cyan"))
   coin <- Fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
   dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
@@ -489,6 +495,8 @@ for (groups in 1:5) {
     for (var in 1:4) {
       row_reference <- row_reference+1
       
+      if(net==4 | net==5){biod <- biod_group_packs[[2]]}else{biod <- biod_group_packs[[1]]} # We select which "subgraph" we use
+      
       Netw_value <- Names_Networks[net]
       Variable_value<- colnames(biod[[groups]])[var]
       
@@ -517,6 +525,8 @@ ref_value <- 0
 for (groups in 1:5) {
   color_groups <- as.character(CUNILLERA_cols("yellow","blue","green","red","cyan"))
   for (net in 1:5) {
+    if(net==4 | net==5){biod <- biod_group_packs[[2]]}else{biod <- biod_group_packs[[1]]} # We select which "subgraph" we use
+    
     coin <- Network_results[[net]][c(length(Network_results[[net]])-54):length(Network_results[[net]])]
     dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
                      biod[[groups]][,1:4])
@@ -677,6 +687,9 @@ for (groups in 1:5) {
 GAM_Sign_plots_total_Fluvial <- list()
 ref_value <- 0
 for (groups in 1:5) {
+  
+  biod <- biod_group_packs[[2]]
+  
   color_groups <- CUNILLERA_cols("yellow","blue","green","red","cyan")
   coin <- Fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
   dataset <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]],
@@ -850,33 +863,33 @@ arrangeGrob(
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
 arrangeGrob(
-arrangeGrob(plot_plot_sign_plot[[2]],top ="A)"),
-arrangeGrob(plot_plot_sign_plot[[12]],top ="B)"),nrow=2), # 100 km
+arrangeGrob(plot_plot_sign_plot[[2]],top =textGrob("A)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+arrangeGrob(plot_plot_sign_plot[[11]],top =textGrob("E)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),nrow=2), # 100 km
 arrangeGrob(
-arrangeGrob(plot_plot_sign_plot[[1]],top ="C)"),
-arrangeGrob(plot_plot_sign_plot[[9]],top ="D)"),nrow=2), # 325 km
+arrangeGrob(plot_plot_sign_plot[[1]],top =textGrob("B)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+arrangeGrob(plot_plot_sign_plot[[8]],top =textGrob("F)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),nrow=2), # 325 km
 arrangeGrob(
-arrangeGrob(plot_plot_sign_plot[[3]],top ="E)"),
-arrangeGrob(plot_plot_sign_plot[[7]],top ="F)"),nrow=2),# 650km
+arrangeGrob(plot_plot_sign_plot[[3]],top =textGrob("C)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+arrangeGrob(plot_plot_sign_plot[[6]],top =textGrob("G)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),nrow=2),# 650km
 arrangeGrob(
-arrangeGrob(plot_plot_sign_plot[[15]],top ="G)"),
-arrangeGrob(plot_plot_sign_plot[[16]],top ="H)"),nrow=2), #Fluvial
+arrangeGrob(plot_plot_sign_plot[[16]],top =textGrob("D)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+arrangeGrob(plot_plot_sign_plot[[17]],top =textGrob("H)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),nrow=2), #Fluvial
 
 left="Richness", nrow=1,ncol=6),
 
 arrangeGrob(
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
-arrangeGrob(
-arrangeGrob(plot_plot_sign_plot[[6]],top ="I)"),
-arrangeGrob(ggplot() + geom_blank()),nrow=2), # 65 km
-arrangeGrob(
-arrangeGrob(plot_plot_sign_plot[[5]],top ="J)"),
-arrangeGrob(plot_plot_sign_plot[[14]],top ="K)"),nrow=2), # 100 km
-arrangeGrob(
-arrangeGrob(plot_plot_sign_plot[[4]],top ="L)"),
-arrangeGrob(plot_plot_sign_plot[[11]],top ="M)"),nrow=2), # 325 km
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
+arrangeGrob(
+arrangeGrob(plot_plot_sign_plot[[5]],top =textGrob("I)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+arrangeGrob(plot_plot_sign_plot[[13]],top =textGrob("L)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),nrow=2), # 100 km
+arrangeGrob(
+arrangeGrob(plot_plot_sign_plot[[4]],top =textGrob("J)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+arrangeGrob(plot_plot_sign_plot[[10]],top =textGrob("M)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),nrow=2), # 325 km
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
+arrangeGrob(
+arrangeGrob(plot_plot_sign_plot[[14]],top =textGrob("K)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+arrangeGrob(plot_plot_sign_plot[[15]],top =textGrob("N)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),nrow=2), # FluviaL
 left="Replacement",nrow=1,ncol=6),
 
 arrangeGrob(
@@ -885,19 +898,24 @@ arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
-arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
+arrangeGrob(
+arrangeGrob(plot_plot_sign_plot[[18]],top =textGrob("O)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+arrangeGrob(ggplot() + geom_blank()),nrow=2),
 left="Rich.Diff.",nrow=1,ncol=6),
 
 arrangeGrob(
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
 arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),
-arrangeGrob(arrangeGrob(plot_plot_sign_plot[[13]],top ="N)"),arrangeGrob(ggplot() + geom_blank()),nrow=2),# 100 km  
-arrangeGrob(arrangeGrob(plot_plot_sign_plot[[10]],top ="O)"),arrangeGrob(ggplot() + geom_blank()),nrow=2),# 325 km  
-arrangeGrob(arrangeGrob(plot_plot_sign_plot[[8]],top ="P)"),arrangeGrob(ggplot() + geom_blank()),nrow=2),# 650 km  
-arrangeGrob(arrangeGrob(plot_plot_sign_plot[[17]],top ="Q)"),arrangeGrob(ggplot() + geom_blank()),nrow=2),# Fluvial km  
+arrangeGrob(arrangeGrob(plot_plot_sign_plot[[12]],top =textGrob("P)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+            arrangeGrob(ggplot() + geom_blank()),nrow=2),# 100 km  
+arrangeGrob(arrangeGrob(plot_plot_sign_plot[[9]],top =textGrob("Q)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+            arrangeGrob(ggplot() + geom_blank()),nrow=2),# 325 km  
+arrangeGrob(arrangeGrob(plot_plot_sign_plot[[7]],top =textGrob("R)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+            arrangeGrob(ggplot() + geom_blank()),nrow=2),# 650 km  
+arrangeGrob(arrangeGrob(ggplot() + geom_blank()),nrow=1),# Fluvial km  
 left = "LCBD",nrow=1,ncol=6),
 
-ncol=1,nrow=4, top="Community Diversity (alpha & beta)")
+ncol=1,nrow=4, top="")
 dev.off()
 
 
@@ -915,11 +933,50 @@ plots_NMDS_total_model_result <- list()
 
 for (groups in 1:5) {
   for (net in 1:5) {
-    coin <- Network_results[[net]][c(length(Network_results[[net]])-54):length(Network_results[[net]])]
-    centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
     
-    dbRDA <- capscale(comm_data[[groups]]~
-                        env_data[[groups]][,4]+env_data[[groups]][,5]+env_data[[groups]][,6]+env_data[[groups]][,7]+env_data[[groups]][,8],
+    comun_data <- list()
+    envir_data <- list()
+    netw_centr <- list()
+    if(net==4 | net==5){
+    #cordenades_xarxes[[net]][which(components(graph.adjacency(MAPS_xarxes[[net]], mode = "undirected",diag = F))$membership==2),]
+    
+    Gral_coin <- which(1:length(Network_results[[net]])>=length(Network_results[[net]])-54)[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]]  
+      
+    Swiss <- as.vector(the_plot_db %>% filter(Longitude<10) %>% select(Lake_name))$Lake_name
+    comun_data[[1]] <- comm_data[[groups]][rownames(comm_data[[groups]])%in%Swiss,]
+    envir_data[[1]] <- env_data[[groups]][rownames(env_data[[groups]])%in%Swiss,]
+    
+    filter_subgraph<- which(which(components(graph.adjacency(MAPS_xarxes[[net]],mode = "undirected",diag = F))$membership==2)>=c(length(Network_results[[net]])-54))
+    filter_subgraph_position <-  which(components(graph.adjacency(MAPS_xarxes[[net]],mode = "undirected",diag = F))$membership==2)[filter_subgraph]
+    netw_centr[[1]] <- filter_subgraph_position[which(filter_subgraph_position%in%Gral_coin)]
+    
+    
+    Aust <- as.vector(the_plot_db %>% filter(Longitude>10) %>% select(Lake_name))$Lake_name
+    comun_data[[2]] <- comm_data[[groups]][rownames(comm_data[[groups]])%in%Aust,]
+    envir_data[[2]] <- env_data[[groups]][rownames(env_data[[groups]])%in%Aust,]
+    
+    filter_subgraph<- which(which(components(graph.adjacency(MAPS_xarxes[[net]],mode = "undirected",diag = F))$membership==1)>=c(length(Network_results[[net]])-54))
+    filter_subgraph_position <-  which(components(graph.adjacency(MAPS_xarxes[[net]],mode = "undirected",diag = F))$membership==1)[filter_subgraph]
+    netw_centr[[2]] <- filter_subgraph_position[which(filter_subgraph_position%in%Gral_coin)]
+    
+    }else{
+    comun_data[[1]] <- comm_data[[groups]]
+    envir_data[[1]] <- env_data[[groups]]
+    netw_centr[[1]] <-which(which(components(graph.adjacency(MAPS_xarxes[[net]], 
+                                                             mode = "undirected",diag = F))$membership==1)>=c(length(Network_results[[net]])-54))
+    } # We select which "subgraph" we use
+
+    group_pack_NMDS_model_result <- list()
+    group_pack_plots_NMDS <- list()
+    SubGraphName <- c("- Switzerland","- Austria")
+    for (group_pack in 1:length(comun_data)) {
+    if(length(comun_data)==1){SubGraphName <- ""}  
+      
+    coin <- Network_results[[net]][netw_centr[[group_pack]]] # OLD way [c(length(Network_results[[net]])-54):length(Network_results[[net]])]
+    if (length(comun_data)==1) {centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])}else{centr_iso <- coin}
+    
+    dbRDA <- capscale(comun_data[[group_pack]]~
+                      envir_data[[group_pack]][,4]+envir_data[[group_pack]][,5]+envir_data[[group_pack]][,6]+envir_data[[group_pack]][,7]+envir_data[[group_pack]][,8],
                       distance = "jaccard",add = "lingoes")
     
     x<- dbRDA$CA$u[,1]
@@ -929,7 +986,7 @@ for (groups in 1:5) {
     NMDS_model <- ordisurf(dbRDA$CA$u ~ dataset[,3], plot = F,)
     NMDS_model_results <- summary(NMDS_model)
     
-    plots_NMDS_model_result[[net]] <- NMDS_model_results
+    group_pack_NMDS_model_result[[group_pack]] <- NMDS_model_results
     
     contour.vals <- extract.xyz(obj = NMDS_model)
     
@@ -941,7 +998,7 @@ for (groups in 1:5) {
       scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
       #manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
       scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
-      labs(title = paste(biod_names[groups], net_names[net]),
+      labs(title = paste(biod_names[groups], net_names[net],SubGraphName[group_pack]),
            subtitle = paste("Unc. Inert.=",round(dbRDA$CA$tot.chi*1/dbRDA$tot.chi,2), 
                             "R2=", round(NMDS_model_results$r.sq,2),
                             "ED=",round(NMDS_model_results$dev.expl,2)))+
@@ -950,27 +1007,66 @@ for (groups in 1:5) {
       theme(legend.position = "none",
             panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
     
-    plots_NMDS[[net]] <- ggdraw() +  draw_plot(the_plot)+
+    group_pack_plots_NMDS[[group_pack]] <- ggdraw() +  draw_plot(the_plot)+
       draw_image(magick::image_read(image_list[[groups]]),
                  scale = 0.2,x = 0.4,y = 0.38) 
-  }
+    
+
+    group_pack_NMDS_model_result[[group_pack]]
+    } # Group_pack
+    if (length(group_pack_plots_NMDS)==1){plots_NMDS[[net]] <- group_pack_plots_NMDS[[1]]}else{plots_NMDS[[net]] <- group_pack_plots_NMDS}
+    if (length(group_pack_plots_NMDS)==1){plots_NMDS_model_result[[net]] <- group_pack_NMDS_model_result[[1]]}else{plots_NMDS_model_result[[net]] <- group_pack_NMDS_model_result}
+  }# Net
   plots_NMDS_total[[groups]] <- plots_NMDS
   plots_NMDS_total_model_result[[groups]] <- plots_NMDS_model_result
 }
 
 # For Fluvial network
-plots_NMDS_fluvial<- list()
-plots_NMDS_total_fluvial <- list()
-
 plots_NMDS_fluvial_model_result <- list()
 plots_NMDS_fluvial_total_model_result <- list()
-
+plots_NMDS_total_fluvial<- list()
+plots_NMDS_fluvial_total_model_result <- list()
 for (groups in 1:5) {
-  coin <- Fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
-  centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
+  comun_data <- list()
+  envir_data <- list()
+  netw_centr <- list()
+ 
+  #cordenades_xarxes[[net]][which(components(graph.adjacency(MAPS_xarxes[[net]], mode = "undirected",diag = F))$membership==2),]
   
-  dbRDA <- capscale(comm_data[[groups]]~
-                      env_data[[groups]][,4]+env_data[[groups]][,5]+env_data[[groups]][,6]+env_data[[groups]][,7]+env_data[[groups]][,8],
+  Gral_coin <- V(GRAPH_xarxes_fluvial[[1]])[c(all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]])[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]]]
+  
+  Swiss <- as.vector(the_plot_db %>% filter(Longitude<10) %>% select(Lake_name))$Lake_name
+  comun_data[[1]] <- comm_data[[groups]][rownames(comm_data[[groups]])%in%Swiss,]
+  envir_data[[1]] <- env_data[[groups]][rownames(env_data[[groups]])%in%Swiss,]
+  out_site <- c()           
+  for (ds in 1:length(Gral_coin)) {
+    out_temp<- which(which(components(GRAPH_xarxes_fluvial[[1]])$membership==1)==Gral_coin[ds])
+    if (length(out_temp)==0) {out_temp <- 0}
+    out_site[ds] <- out_temp}
+  netw_centr[[1]] <-   which(components(GRAPH_xarxes_fluvial[[1]])$membership==1)[out_site[which(out_site>0)]]
+    
+  Aust <- as.vector(the_plot_db %>% filter(Longitude>10) %>% select(Lake_name))$Lake_name
+  comun_data[[2]] <- comm_data[[groups]][rownames(comm_data[[groups]])%in%Aust,]
+  envir_data[[2]] <- env_data[[groups]][rownames(env_data[[groups]])%in%Aust,]
+  out_site <- c()           
+  for (ds in 1:length(Gral_coin)) {
+    out_temp<- which(which(components(GRAPH_xarxes_fluvial[[1]])$membership==2)==Gral_coin[ds])
+    if (length(out_temp)==0) {out_temp <- 0}
+    out_site[ds] <- out_temp}
+  netw_centr[[2]] <-   which(components(GRAPH_xarxes_fluvial[[1]])$membership==2)[out_site[which(out_site>0)]]
+
+  group_pack_NMDS_model_result <- list()
+  group_pack_plots_NMDS <- list()
+  
+  SubGraphName <- c("- Switzerland","- Austria")
+  for (group_pack in 1:length(comun_data)) {
+  if(length(comun_data)==1){SubGraphName <- ""}  
+    
+  coin <- Fluvial_network_results[[1]][netw_centr[[group_pack]]]
+  centr_iso <- coin 
+    
+  dbRDA <- capscale(comun_data[[group_pack]]~
+                    envir_data[[group_pack]][,4]+envir_data[[group_pack]][,5]+envir_data[[group_pack]][,6]+envir_data[[group_pack]][,7]+envir_data[[group_pack]][,8],
                     distance = "jaccard",add = "lingoes")
   
   x<- dbRDA$CA$u[,1]
@@ -980,7 +1076,7 @@ for (groups in 1:5) {
   NMDS_model <- ordisurf(dbRDA$CA$u ~ dataset[,3], plot = F)
   NMDS_model_results <- summary(NMDS_model)
   
-  plots_NMDS_fluvial_model_result[[groups]] <- NMDS_model_results
+  group_pack_NMDS_model_result[[group_pack]] <- NMDS_model_results
   
   contour.vals <- extract.xyz(obj = NMDS_model)
   
@@ -990,7 +1086,7 @@ for (groups in 1:5) {
     geom_contour(data=contour.vals, aes(x, y, z = z, colour = ..level..))+
     scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
     scale_fill_viridis(alpha = 1,begin =1 ,end = 0)+
-    labs(title = paste(biod_names[groups], net_names[net]),
+    labs(title = paste(biod_names[groups], net_names[6],SubGraphName[group_pack]),
          subtitle = paste("Unc. Inert.=",round(dbRDA$CA$tot.chi*1/dbRDA$tot.chi,2), 
                           "R2=", round(NMDS_model_results$r.sq,2),
                           "ED=",round(NMDS_model_results$dev.expl,2)))+
@@ -999,34 +1095,44 @@ for (groups in 1:5) {
     theme(legend.position = "none",
           panel.background=element_rect(colour="black", fill=alpha(color_groups[groups], 0.1)))
   
-  plots_NMDS_fluvial[[groups]]<-ggdraw() +  draw_plot(the_plot)+
+  group_pack_plots_NMDS[[group_pack]]<-ggdraw() +  draw_plot(the_plot)+
     draw_image(magick::image_read(image_list[[groups]]),
                scale = 0.2,x = 0.4,y = 0.38) 
-  
-  plots_NMDS_total_fluvial[[groups]] <- plots_NMDS_fluvial
-  plots_NMDS_fluvial_total_model_result[[groups]] <- plots_NMDS_fluvial_model_result
+  }# group_pack
+  plots_NMDS_total_fluvial[[groups]] <- group_pack_plots_NMDS
+  plots_NMDS_fluvial_total_model_result[[groups]] <- group_pack_NMDS_model_result
 }
 
 
 # Print NMDS
 png(filename ="Figures/NMDS_Diverse.png",
-    width =729*10, height =629*10 ,units ="px",res = 300)
+    width =729*12, height =629*10 ,units ="px",res = 300)
 grid.arrange(plots_NMDS_total[[1]][[1]],plots_NMDS_total[[1]][[2]],plots_NMDS_total[[1]][[3]],
-             plots_NMDS_total[[1]][[4]],plots_NMDS_total[[1]][[5]],plots_NMDS_total_fluvial[[1]][[1]],
+             plots_NMDS_total[[1]][[4]][[1]],plots_NMDS_total[[1]][[4]][[2]],
+             plots_NMDS_total[[1]][[5]][[1]], plots_NMDS_total[[1]][[5]][[2]],
+             plots_NMDS_total_fluvial[[1]][[1]],plots_NMDS_total_fluvial[[1]][[2]],
              
              plots_NMDS_total[[2]][[1]],plots_NMDS_total[[2]][[2]],plots_NMDS_total[[2]][[3]],
-             plots_NMDS_total[[2]][[4]],plots_NMDS_total[[2]][[5]],plots_NMDS_total_fluvial[[2]][[2]],
+             plots_NMDS_total[[2]][[4]][[1]],plots_NMDS_total[[2]][[4]][[2]],
+             plots_NMDS_total[[2]][[5]][[1]], plots_NMDS_total[[2]][[5]][[2]],
+             plots_NMDS_total_fluvial[[2]][[1]],plots_NMDS_total_fluvial[[2]][[2]],
              
              plots_NMDS_total[[3]][[1]],plots_NMDS_total[[3]][[2]],plots_NMDS_total[[3]][[3]],
-             plots_NMDS_total[[3]][[4]],plots_NMDS_total[[3]][[5]],plots_NMDS_total_fluvial[[3]][[3]],
+             plots_NMDS_total[[3]][[4]][[1]],plots_NMDS_total[[3]][[4]][[2]],
+             plots_NMDS_total[[3]][[5]][[1]], plots_NMDS_total[[3]][[5]][[2]],
+             plots_NMDS_total_fluvial[[3]][[1]],plots_NMDS_total_fluvial[[3]][[2]],
              
              plots_NMDS_total[[4]][[1]],plots_NMDS_total[[4]][[2]],plots_NMDS_total[[4]][[3]],
-             plots_NMDS_total[[4]][[4]],plots_NMDS_total[[4]][[5]],plots_NMDS_total_fluvial[[4]][[4]],
+             plots_NMDS_total[[4]][[4]][[1]],plots_NMDS_total[[4]][[4]][[2]],
+             plots_NMDS_total[[4]][[5]][[1]], plots_NMDS_total[[4]][[5]][[2]],
+             plots_NMDS_total_fluvial[[4]][[1]],plots_NMDS_total_fluvial[[4]][[2]],
              
              plots_NMDS_total[[5]][[1]],plots_NMDS_total[[5]][[2]],plots_NMDS_total[[5]][[3]],
-             plots_NMDS_total[[5]][[4]],plots_NMDS_total[[5]][[5]],plots_NMDS_total_fluvial[[5]][[5]],
+             plots_NMDS_total[[5]][[4]][[1]],plots_NMDS_total[[5]][[4]][[2]],
+             plots_NMDS_total[[5]][[5]][[1]], plots_NMDS_total[[5]][[5]][[2]],
+             plots_NMDS_total_fluvial[[5]][[1]],plots_NMDS_total_fluvial[[5]][[2]],
              
-             ncol=6,nrow=5, top="NMDS")
+             ncol=9,nrow=5, top="NMDS")
 dev.off()
 
 
@@ -1038,11 +1144,48 @@ ref_value <- 0
 
 for (groups in 1:5) {
   for (net in 1:5) {
-    coin <- Network_results[[net]][c(length(Network_results[[net]])-54):length(Network_results[[net]])]
-    centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
     
-    dbRDA <- capscale(comm_data[[groups]]~
-                        env_data[[groups]][,4]+env_data[[groups]][,5]+env_data[[groups]][,6]+env_data[[groups]][,7]+env_data[[groups]][,8],
+    comun_data <- list()
+    envir_data <- list()
+    netw_centr <- list()
+    if(net==4 | net==5){
+      #cordenades_xarxes[[net]][which(components(graph.adjacency(MAPS_xarxes[[net]], mode = "undirected",diag = F))$membership==2),]
+      
+      Gral_coin <- which(1:length(Network_results[[net]])>=length(Network_results[[net]])-54)[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]]  
+      
+      Swiss <- as.vector(the_plot_db %>% filter(Longitude<10) %>% select(Lake_name))$Lake_name
+      comun_data[[1]] <- comm_data[[groups]][rownames(comm_data[[groups]])%in%Swiss,]
+      envir_data[[1]] <- env_data[[groups]][rownames(env_data[[groups]])%in%Swiss,]
+      
+      filter_subgraph<- which(which(components(graph.adjacency(MAPS_xarxes[[net]],mode = "undirected",diag = F))$membership==2)>=c(length(Network_results[[net]])-54))
+      filter_subgraph_position <-  which(components(graph.adjacency(MAPS_xarxes[[net]],mode = "undirected",diag = F))$membership==2)[filter_subgraph]
+      netw_centr[[1]] <- filter_subgraph_position[which(filter_subgraph_position%in%Gral_coin)]
+      
+      
+      Aust <- as.vector(the_plot_db %>% filter(Longitude>10) %>% select(Lake_name))$Lake_name
+      comun_data[[2]] <- comm_data[[groups]][rownames(comm_data[[groups]])%in%Aust,]
+      envir_data[[2]] <- env_data[[groups]][rownames(env_data[[groups]])%in%Aust,]
+      
+      filter_subgraph<- which(which(components(graph.adjacency(MAPS_xarxes[[net]],mode = "undirected",diag = F))$membership==1)>=c(length(Network_results[[net]])-54))
+      filter_subgraph_position <-  which(components(graph.adjacency(MAPS_xarxes[[net]],mode = "undirected",diag = F))$membership==1)[filter_subgraph]
+      netw_centr[[2]] <- filter_subgraph_position[which(filter_subgraph_position%in%Gral_coin)]
+      
+    }else{
+      comun_data[[1]] <- comm_data[[groups]]
+      envir_data[[1]] <- env_data[[groups]]
+      netw_centr[[1]] <-which(which(components(graph.adjacency(MAPS_xarxes[[net]], 
+                                                               mode = "undirected",diag = F))$membership==1)>=c(length(Network_results[[net]])-54))
+    } # We select which "subgraph" we use
+    
+    SubGraphName <- c("- Switzerland","- Austria")
+    for (group_pack in 1:length(comun_data)) {
+    if(length(comun_data)==1){SubGraphName <- ""}  
+    
+    coin <- Network_results[[net]][netw_centr[[group_pack]]] # OLD way [c(length(Network_results[[net]])-54):length(Network_results[[net]])]
+    if (length(comun_data)==1) {centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])}else{centr_iso <- coin}
+    
+    dbRDA <- capscale(comun_data[[group_pack]]~
+                      envir_data[[group_pack]][,4]+envir_data[[group_pack]][,5]+envir_data[[group_pack]][,6]+envir_data[[group_pack]][,7]+envir_data[[group_pack]][,8],
                       distance = "jaccard",add = "lingoes")
     
     x<- dbRDA$CA$u[,1]
@@ -1065,7 +1208,7 @@ for (groups in 1:5) {
         geom_contour(data=contour.vals, aes(x, y, z = z, colour = ..level..))+
         scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
         scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
-        labs(title = paste(LETTERS[ref_value],")",biod_names[groups], net_names[net]),
+        labs(title = paste(biod_names[groups], net_names[net],SubGraphName[group_pack]),
              subtitle = paste("Unc. Inert.=",round(dbRDA$CA$tot.chi*1/dbRDA$tot.chi,2), 
                               "R2=", round(NMDS_model_results$r.sq,2),
                               "ED=",round(NMDS_model_results$dev.expl,2)))+
@@ -1079,6 +1222,7 @@ for (groups in 1:5) {
                    scale = 0.2,x = 0.4,y = 0.38) 
       
     }
+   }# Group packs
   }
   plots_NMDS_sign
 }
@@ -1087,13 +1231,46 @@ for (groups in 1:5) {
 plots_NMDS_fluvial_sign<- list()
 ref_value <- 0
 for (groups in 1:5) {
-  coin <- Fluvial_network_results[[1]][all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]]]
-  centr_iso <- cbind(coin[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]])
   
-  dbRDA <- capscale(comm_data[[groups]]~
-                      env_data[[groups]][,4]+env_data[[groups]][,5]+env_data[[groups]][,6]+env_data[[groups]][,7]+env_data[[groups]][,8],
+  comun_data <- list()
+  envir_data <- list()
+  netw_centr <- list()
+  
+  #cordenades_xarxes[[net]][which(components(graph.adjacency(MAPS_xarxes[[net]], mode = "undirected",diag = F))$membership==2),]
+  
+  Gral_coin <- V(GRAPH_xarxes_fluvial[[1]])[c(all_lakes_BASINS_fluvial[[1]][correspondence_BASINS_fluvial[[1]]])[coincidence_values[[groups]][which(coincidence_values[[groups]]>0)]]]
+  
+  Swiss <- as.vector(the_plot_db %>% filter(Longitude<10) %>% select(Lake_name))$Lake_name
+  comun_data[[1]] <- comm_data[[groups]][rownames(comm_data[[groups]])%in%Swiss,]
+  envir_data[[1]] <- env_data[[groups]][rownames(env_data[[groups]])%in%Swiss,]
+  out_site <- c()           
+  for (ds in 1:length(Gral_coin)) {
+    out_temp<- which(which(components(GRAPH_xarxes_fluvial[[1]])$membership==1)==Gral_coin[ds])
+    if (length(out_temp)==0) {out_temp <- 0}
+    out_site[ds] <- out_temp}
+  netw_centr[[1]] <-   which(components(GRAPH_xarxes_fluvial[[1]])$membership==1)[out_site[which(out_site>0)]]
+  
+  Aust <- as.vector(the_plot_db %>% filter(Longitude>10) %>% select(Lake_name))$Lake_name
+  comun_data[[2]] <- comm_data[[groups]][rownames(comm_data[[groups]])%in%Aust,]
+  envir_data[[2]] <- env_data[[groups]][rownames(env_data[[groups]])%in%Aust,]
+  out_site <- c()           
+  for (ds in 1:length(Gral_coin)) {
+    out_temp<- which(which(components(GRAPH_xarxes_fluvial[[1]])$membership==2)==Gral_coin[ds])
+    if (length(out_temp)==0) {out_temp <- 0}
+    out_site[ds] <- out_temp}
+  netw_centr[[2]] <-   which(components(GRAPH_xarxes_fluvial[[1]])$membership==2)[out_site[which(out_site>0)]]
+  
+  SubGraphName <- c("- Switzerland","- Austria")
+  for (group_pack in 1:length(comun_data)) {
+  if(length(comun_data)==1){SubGraphName <- ""}    
+    
+  coin <- Fluvial_network_results[[1]][netw_centr[[group_pack]]]
+  centr_iso <- coin 
+  
+  dbRDA <- capscale(comun_data[[group_pack]]~
+                    envir_data[[group_pack]][,4]+envir_data[[group_pack]][,5]+envir_data[[group_pack]][,6]+envir_data[[group_pack]][,7]+envir_data[[group_pack]][,8],
                     distance = "jaccard",add = "lingoes")
-  
+
   x<- dbRDA$CA$u[,1]
   y <- dbRDA$CA$u[,2]
   
@@ -1115,7 +1292,7 @@ for (groups in 1:5) {
       scale_colour_viridis(alpha = 1,begin = 1,end = 0)+
       #manual(values = viridis_pal(0.9,1,0,direction = -1)(length(unique(df_ellipse$Group))))+
       scale_fill_viridis(alpha = 1,begin = 1,end = 0)+
-      labs(title = paste(LETTERS[length(plots_NMDS_sign)+ref_value],")", biod_names[groups], "Fluvial"),
+      labs(title = paste(biod_names[groups], "Fluvial", SubGraphName[group_pack]),
            subtitle = paste("Unc. Inert.=",round(dbRDA$CA$tot.chi*1/dbRDA$tot.chi,2), 
                             "R2=", round(NMDS_model_results$r.sq,2),
                             "ED=",round(NMDS_model_results$dev.expl,2)))+
@@ -1128,19 +1305,50 @@ for (groups in 1:5) {
       draw_image(magick::image_read(image_list[[groups]]),
                  scale = 0.2,x = 0.4,y = 0.38) 
   }
+  }# group_pack
   plots_NMDS_fluvial_sign
 }
 
 png(filename ="Figures/NMDS_Diverse_Sign.png",
     width =750*8 ,height =629*5 ,units ="px",res = 250)
 grid.arrange(
-  arrangeGrob(plots_NMDS_sign[[5]],nrow=3), # 6.5
-  arrangeGrob(plots_NMDS_sign[[4]],nrow=3), # 65
-  arrangeGrob(plots_NMDS_sign[[3]],plots_NMDS_sign[[8]],plots_NMDS_sign[[11]],nrow=3), # 100
-  arrangeGrob(plots_NMDS_sign[[2]],plots_NMDS_sign[[7]],plots_NMDS_sign[[10]],nrow=3), # 325
-  arrangeGrob(plots_NMDS_sign[[1]],plots_NMDS_sign[[6]],plots_NMDS_sign[[9]],nrow=3), # 650
-  arrangeGrob(plots_NMDS_fluvial_sign[[1]],plots_NMDS_fluvial_sign[[2]],plots_NMDS_fluvial_sign[[3]],nrow=3), # Fluvial
-  ncol=6,nrow=1, top="Community Composition (NMDS SS)")
+  arrangeGrob(
+    arrangeGrob(plots_NMDS_sign[[5]],top=textGrob("A)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(plots_NMDS_sign[[6]],top=textGrob("G)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(plots_NMDS_sign[[10]],top=textGrob("H)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(plots_NMDS_sign[[14]],top=textGrob("M)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    nrow=4),# 6.5
+  arrangeGrob(
+    arrangeGrob(plots_NMDS_sign[[4]],top=textGrob("B)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(ggplot() + geom_blank()),
+    arrangeGrob(ggplot() + geom_blank()),
+    arrangeGrob(plots_NMDS_sign[[14]],top=textGrob("N)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    nrow=4), # 65
+  arrangeGrob(
+    arrangeGrob(plots_NMDS_sign[[3]],top=textGrob("C)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(ggplot() + geom_blank()),
+    arrangeGrob(plots_NMDS_sign[[9]],top=textGrob("I)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(plots_NMDS_sign[[13]],top=textGrob("O)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    nrow=4), # 100
+  arrangeGrob(
+    arrangeGrob(plots_NMDS_sign[[2]],top=textGrob("D)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(ggplot() + geom_blank()),
+    arrangeGrob(plots_NMDS_sign[[8]],top=textGrob("J)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(plots_NMDS_sign[[12]],top=textGrob("P)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    nrow=4), # 325
+  arrangeGrob(
+    arrangeGrob(plots_NMDS_sign[[1]],top=textGrob("E)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(ggplot() + geom_blank()),
+    arrangeGrob(plots_NMDS_sign[[7]],top=textGrob("K)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(plots_NMDS_sign[[11]],top=textGrob("Q)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    nrow=4), # 650
+  arrangeGrob(
+    arrangeGrob(plots_NMDS_fluvial_sign[[1]],top=textGrob("F)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(ggplot() + geom_blank()),
+    arrangeGrob(plots_NMDS_fluvial_sign[[2]],top=textGrob("L)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(ggplot() + geom_blank()),
+    nrow=4), # Fluvial
+  ncol=6,nrow=1, top="")
 dev.off()
 
 # GAM NMDS models result in table format - Supplementary like______________________________ ####
@@ -1149,7 +1357,7 @@ Names_Networks <- c("650 km", "325 km","100 km","65 km","6.5 km", "Fluvial")
 
 # Add the fluvial as a sixth network
 for (t in 1:5) {
-  plots_NMDS_total_model_result[[t]][[6]] <- plots_NMDS_fluvial_total_model_result[[5]][[t]]
+  plots_NMDS_total_model_result[[t]][[6]] <- plots_NMDS_fluvial_total_model_result[[t]]
 }
 
 # 
@@ -1188,12 +1396,14 @@ sign_groups <- list()
 
 for (group in 1:5) {
   for (netw in 1:5) {
+    
     sign <- c()
     sign[1] <-GAMmodel_resutls_total[[group]][[netw]][[1]][[8]]
     sign[2] <-GAMmodel_resutls_total[[group]][[netw]][[2]][[8]]
     sign[3] <-GAMmodel_resutls_total[[group]][[netw]][[3]][[8]]
     sign[4] <-GAMmodel_resutls_total[[group]][[netw]][[4]][[8]]
-    sign[5] <-plots_NMDS_total_model_result[[group]][[netw]][[8]]
+    if(netw==4 | netw==5){sign[5] <-plots_NMDS_total_model_result[[group]][[netw]][[1]][[8]]}else{sign[5] <-plots_NMDS_total_model_result[[group]][[netw]][[8]]}
+    if(netw==4 | netw==5){sign[6] <-plots_NMDS_total_model_result[[group]][[netw]][[2]][[8]]}else{sign[6] <-1}
     sign_netw[[netw]] <- sign
   }
   sign_groups[[group]] <- sign_netw
@@ -1206,14 +1416,15 @@ for (group in 1:5) {
   sign[2] <-GAMmodel_resutls_fluvial[[group]][[2]][[8]]
   sign[3] <-GAMmodel_resutls_fluvial[[group]][[3]][[8]]
   sign[4] <-GAMmodel_resutls_fluvial[[group]][[4]][[8]]
-  sign[5] <-plots_NMDS_fluvial_total_model_result[[5]][[group]][[8]]
+  sign[5] <-plots_NMDS_fluvial_total_model_result[[group]][[1]][[8]]
+  sign[6] <-plots_NMDS_fluvial_total_model_result[[group]][[2]][[8]]
   flu_sign_groups[[group]] <- sign
 }
 
 
-Names_Variab <- c("Species richness", "LCBD", "Replacement", "Richness difference","dbRDA" )
+Names_Variab <- c("Species richness", "LCBD", "Replacement", "Richness difference","dbRDA","dbRDA")
 plots_significance <- list()
-for (variable in 1:5) {
+for (variable in 1:6) {
   
   max_netw <- cbind(c(sign_groups[[1]][[1]][[variable]], sign_groups[[2]][[1]][[variable]], sign_groups[[3]][[1]][[variable]], 
                       sign_groups[[4]][[1]][[variable]], sign_groups[[5]][[1]][[variable]]),
@@ -1245,8 +1456,8 @@ for (variable in 1:5) {
                      rep("Fluvial", 5), 
                      c("S16","S18","Phy","Zoo", "S18 Zoo"))
   
-  
   dataset_pval <- as.data.frame(rbind(max_netw,mid_netw,mid_mid_netw,small_netw,min_netw,fluv_netw))
+  
   colnames(dataset_pval) <- c("pval","Network","Group")
   dataset_pval$pval <-as.numeric(dataset_pval$pval)
   dataset_pval$Network <- factor(dataset_pval$Network,
@@ -1255,26 +1466,47 @@ for (variable in 1:5) {
                                levels = c("S16","S18","Phy","Zoo", "S18 Zoo"))
   significants <- rep(">0.05",5*6)
   significants[which(dataset_pval$pval<0.05)]<- "<0.05"
-  dataset_pval$Sign <- factor(significants) 
+  dataset_pval$Sign <- factor(significants)
+  if(variable==5){dataset_pval_Temp <- dataset_pval}
+  if(variable==6){dataset_pval <- bind_rows(dataset_pval_Temp,dataset_pval)}
 
   color_groups <- as.character(CUNILLERA_cols("yellow","blue","green","red","cyan"))
   
-  if (variable==4) {
+#  if (variable==4) {
+#plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(pval)))+
+#  geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
+#  geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
+#  scale_x_discrete(limits=c("6.5 km","65 km", "100 km","325 km","650 km", "Fluvial"))+
+#  scale_alpha_manual(values = c(0.3))+
+#  scale_size_manual(values = c(2))+
+#  scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
+#                             color_groups[4],color_groups[5],color_groups[6]))+
+#  scale_y_continuous(expand = c(0.2,0.01),
+#                     breaks =c(0.05,0.2,0.4,0.6,0.8,1) )+
+#  geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
+#  labs(title="", subtitle=Names_Variab[variable])+ylab("p-values")+xlab("")+
+#  theme_classic()+theme(legend.position = "none")    
+#  }else{
 plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(pval)))+
   geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
-  geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
+  geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.3)+
   scale_x_discrete(limits=c("6.5 km","65 km", "100 km","325 km","650 km", "Fluvial"))+
-  scale_alpha_manual(values = c(0.3))+
-  scale_size_manual(values = c(2))+
+  scale_alpha_manual(values = c(0.9,0.3))+
+  scale_size_manual(values = c(5,2))+
   scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
                              color_groups[4],color_groups[5],color_groups[6]))+
   scale_y_continuous(expand = c(0.2,0.01),
                      breaks =c(0.05,0.2,0.4,0.6,0.8,1) )+
-  geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
-  labs(title="", subtitle=Names_Variab[variable])+ylab("p-values")+xlab("")+
-  theme_classic()+theme(legend.position = "none")    
-  }else{
-plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(pval)))+
+  geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey30")+
+  labs(title="",subtitles=Names_Variab[variable])+ylab("p-values")+xlab("")+
+  theme_classic()+theme(legend.position = "none")
+#  }
+  
+  
+}
+
+
+plot_for_legend <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(pval)))+
   geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
   geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
   scale_x_discrete(limits=c("6.5 km","65 km", "100 km","325 km","650 km", "Fluvial"))+
@@ -1285,14 +1517,32 @@ plots_significance[[variable]] <-  ggplot(dataset_pval, aes(x=Network, y=as.nume
   scale_y_continuous(expand = c(0.2,0.01),
                      breaks =c(0.05,0.2,0.4,0.6,0.8,1) )+
   geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
-  labs(title="",subtitles=Names_Variab[variable])+ylab("p-values")+xlab("")+
-  theme_classic()+theme(legend.position = "none")
-  }
-  
-  
-}
+  guides(fill = guide_legend(override.aes = list(size = 7)))+
+  labs(title="", subtitle = "dbRDA ordisurf")+ylab("p-values")+xlab("")+
+  theme_classic()+theme(legend.position = "bottom",
+                        legend.key.size = unit(.25, "cm"),
+                        legend.box="vertical")
 
-# Summary plots NMDS _________________________________________________________ ####
+
+legend_try <- cowplot::get_legend(plot_for_legend)
+
+
+png(filename =paste("Figures/All_Significance_Groups.png"),
+    width =400*3 ,height =650*6 ,units ="px",res = 300)
+grid.arrange(plots_significance[[1]],
+             plots_significance[[3]],plots_significance[[4]],plots_significance[[2]],
+             plots_significance[[6]],
+             legend_try,
+             ncol=1,nrow=6, top="Significance values")
+dev.off()      
+
+save.image("Database.RData")
+
+
+
+
+# OLD STUFF 
+#Summary plots NMDS _________________________________________________________ ##
 
 # For Euclidean network
 plots_NMDS_sign <- list()
@@ -1356,35 +1606,4 @@ dataset_pval$Group <- factor(dataset_pval$Group,levels = c("S16","S18","Phy","Zo
 
 color_groups <- as.character(CUNILLERA_cols("yellow","blue","green","red","cyan"))
 
-plots_significance[[5]] <-  ggplot(dataset_pval, aes(x=Network, y=as.numeric(pval)))+
-  geom_abline(slope = 0,intercept = 0.05, colour="black", linetype=2,size=1)+
-  geom_jitter(aes(fill=Group, alpha=Sign, size=Sign),shape=21,width = 0.5)+
-  scale_x_discrete(limits=c("6.5 km","65 km", "100 km","325 km","650 km", "Fluvial"))+
-  scale_alpha_manual(values = c(0.9,0.3))+
-  scale_size_manual(values = c(7,2))+
-  scale_fill_manual(values=c(color_groups[1],color_groups[2],color_groups[3],
-                             color_groups[4],color_groups[5],color_groups[6]))+
-  scale_y_continuous(expand = c(0.2,0.01),
-                     breaks =c(0.05,0.2,0.4,0.6,0.8,1) )+
-  geom_vline(xintercept = c(1.5,2.5,3.5,4.5,5.5), size=1, colour="grey70")+
-  guides(fill = guide_legend(override.aes = list(size = 7)))+
-  labs(title="", subtitle = "dbRDA ordisurf")+ylab("p-values")+xlab("")+
-  theme_classic()+theme(legend.position = "bottom",
-                        legend.key.size = unit(.25, "cm"),
-                        legend.box="vertical")
-
-
-legend_try <- cowplot::get_legend(plots_significance[[5]])
-
-
-png(filename =paste("Figures/All_Significance_Groups.png"),
-    width =400*3 ,height =650*6 ,units ="px",res = 300)
-grid.arrange(plots_significance[[1]],
-             plots_significance[[3]],plots_significance[[4]],plots_significance[[2]],
-             plots_significance[[5]]+theme(legend.position = "none"),
-             legend_try,
-             ncol=1,nrow=6, top="Significance values")
-dev.off()      
-
-  save.image("Database.RData")
 

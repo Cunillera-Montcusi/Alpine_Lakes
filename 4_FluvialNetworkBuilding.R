@@ -60,8 +60,7 @@ library(shp2graph)
 
 correspondence_BASINS <- c()
 for (a in 1:55) {
-  correspondence_BASINS[a] <- which(round(cordenades_xarxes[[1]][(nrow(cordenades_xarxes[[1]])-55+a),1],4)==
-                                      round(cordenades_xarxes_BASINS[[1]][,1],4))  
+  correspondence_BASINS[a] <- which(round(cordenades_xarxes[[1]][(nrow(cordenades_xarxes[[1]])-55+a),1],4)==round(cordenades_xarxes_BASINS[[1]][,1],4))  
 }
 correspondence_BASINS_fluvial[[1]] <- correspondence_BASINS
 # We rewrite "ptsxy" with the converted coordinates to lat/long
@@ -131,3 +130,4 @@ grid.arrange(lakes_loc_plot[[1]],lakes_loc_plot[[2]],lakes_loc_plot[[3]],lakes_l
 dev.off()
 
 save.image("Database.RData")
+

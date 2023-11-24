@@ -1316,7 +1316,7 @@ grid.arrange(
     arrangeGrob(plots_NMDS_sign[[5]],top=textGrob("A)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
     arrangeGrob(plots_NMDS_sign[[6]],top=textGrob("G)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
     arrangeGrob(plots_NMDS_sign[[10]],top=textGrob("H)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
-    arrangeGrob(plots_NMDS_sign[[14]],top=textGrob("M)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
+    arrangeGrob(plots_NMDS_sign[[15]],top=textGrob("M)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
     nrow=4),# 6.5
   arrangeGrob(
     arrangeGrob(plots_NMDS_sign[[4]],top=textGrob("B)",x = 0.2, hjust = 0,gp=gpar(fontsize=30,font=2))),
